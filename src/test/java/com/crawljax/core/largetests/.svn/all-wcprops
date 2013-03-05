@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/largetests
+END
+LargeTestHtmlUnit.java
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/largetests/LargeTestHtmlUnit.java
+END
+LargeTestChrome.java
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/largetests/LargeTestChrome.java
+END
+LargeTestIE.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/largetests/LargeTestIE.java
+END
+LargeTestSuper.java
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/largetests/LargeTestSuper.java
+END
+LargeFirefoxTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/largetests/LargeFirefoxTest.java
+END

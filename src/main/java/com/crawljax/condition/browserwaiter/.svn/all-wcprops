@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/browserwaiter
+END
+WaitConditionChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 127
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/browserwaiter/WaitConditionChecker.java
+END
+ExpectedElementCondition.java
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/browserwaiter/ExpectedElementCondition.java
+END
+package-info.java
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/browserwaiter/package-info.java
+END
+ExpectedVisibleCondition.java
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/browserwaiter/ExpectedVisibleCondition.java
+END
+ExpectedCondition.java
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/browserwaiter/ExpectedCondition.java
+END
+WaitCondition.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/browserwaiter/WaitCondition.java
+END

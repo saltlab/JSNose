@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util
+END
+HelperTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/HelperTest.java
+END
+tuduDombefore.html.tidy
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/tuduDombefore.html.tidy
+END
+EditDistanceTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/EditDistanceTest.java
+END
+state-10.html
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/state-10.html
+END
+domtest.html
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/domtest.html
+END
+XPathHelperTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/XPathHelperTest.java
+END
+XMLObjectTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/XMLObjectTest.java
+END
+tuduDombefore.html
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/tuduDombefore.html
+END
+ElementResolverTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/ElementResolverTest.java
+END
+XmlunitDifferenceTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/XmlunitDifferenceTest.java
+END
+PrettyHTMLTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/util/PrettyHTMLTest.java
+END

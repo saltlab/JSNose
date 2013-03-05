@@ -1,0 +1,89 @@
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/saltlab/!svn/ver/1872/trunk/code/crawljax-dev/src/test/java/com/crawljax/core
+END
+CrawlerTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/CrawlerTest.java
+END
+TagAttributeTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/TagAttributeTest.java
+END
+DisableCrawlIFrameTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/DisableCrawlIFrameTest.java
+END
+NestedFramesTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/NestedFramesTest.java
+END
+CandidateElementManagerTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/CandidateElementManagerTest.java
+END
+CandidateElementExtractorTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/saltlab/!svn/ver/1872/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/CandidateElementExtractorTest.java
+END
+IFrameSuper.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/IFrameSuper.java
+END
+IFrameTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/IFrameTest.java
+END
+PopUpTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/PopUpTest.java
+END
+CandidateElementTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/CandidateElementTest.java
+END
+ExcludeIFrameWildcardTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/ExcludeIFrameWildcardTest.java
+END
+ExcludeOnlySubIFrameTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/ExcludeOnlySubIFrameTest.java
+END
+ExcludeIFrameTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/ExcludeIFrameTest.java
+END
+CrawlerExecutorTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/CrawlerExecutorTest.java
+END

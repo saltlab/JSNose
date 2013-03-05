@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/configuration
+END
+UnderXPathTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/configuration/UnderXPathTest.java
+END
+underxpath.html
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/configuration/underxpath.html
+END
+crawljax.properties
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/configuration/crawljax.properties
+END
+ConfigurationTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/configuration/ConfigurationTest.java
+END
+PropertiesFileTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/core/configuration/PropertiesFileTest.java
+END

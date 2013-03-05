@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/browser
+END
+DummyBrowser.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/browser/DummyBrowser.java
+END
+WebDriverBackedEmbeddedBrowserNoCrashTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/browser/WebDriverBackedEmbeddedBrowserNoCrashTest.java
+END
+WebDriverBackedEmbeddedBrowserTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/browser/WebDriverBackedEmbeddedBrowserTest.java
+END
+WebDriverBackedEmbeddedBrowserLinuxCrash.java
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/browser/WebDriverBackedEmbeddedBrowserLinuxCrash.java
+END
+FirefoxLinuxCrash.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/browser/FirefoxLinuxCrash.java
+END
+BrowserPoolTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/browser/BrowserPoolTest.java
+END
+WebDriverFirefoxLinuxCrash.java
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/saltlab/!svn/ver/1418/trunk/code/crawljax-dev/src/test/java/com/crawljax/browser/WebDriverFirefoxLinuxCrash.java
+END

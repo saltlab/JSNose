@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/crawlcondition
+END
+CrawlCondition.java
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/crawlcondition/CrawlCondition.java
+END
+CrawlConditionChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/crawlcondition/CrawlConditionChecker.java
+END
+package-info.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/saltlab/!svn/ver/1419/trunk/code/crawljax-dev/src/main/java/com/crawljax/condition/crawlcondition/package-info.java
+END

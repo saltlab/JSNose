@@ -1,4 +1,4 @@
-JSNose
+FeedEx
 ======
 
-JavaScript Code Smell Detection Tool
+Feedback-directed Exploration of Web 2.0 Application 

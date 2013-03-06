@@ -4,65 +4,20 @@
 	<groupId>com.JSNose</groupId>
 	<artifactId>JSNose</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0</version>
-	<name>Crawljax</name>
-	<description>
-		Crawling Ajax applications through dynamic analysis and
-		reconstruction of the UI state changes. Crawljax is based on a
-		method which dynamically builds a `state-flow graph' modeling
-		the various navigation paths and states within an Ajax
-		application.
-	</description>
-	<url>http://www.crawljax.com</url>
-	<inceptionYear>2007</inceptionYear>
+	<version>1.0-SNAPSHOT</version>
+	<name>JSNose</name>
+	<description>JSNose is a JavaScript code smell detector tool. The crawling is built on Crawljax tool which dynamically builds a `state-flow graph' modeling
+the various navigation paths and states within an Ajax application.</description>
+	<inceptionYear>2013</inceptionYear>
 
 	<developers>
-		<developer>
-			<id>amesbah</id>
-			<name>Ali Mesbah</name>
-			<email>a.mesbah@gmail.com</email>
-			<url>http://www.st.ewi.tudelft.nl/~mesbah/</url>
-			<organization>SWERL, TU Delft</organization>
-			<organizationUrl>http://swerl.tudelft.nl</organizationUrl>
-			<timezone>+1</timezone>
-		</developer>
-		<developer>
-			<id>frankgroeneveld</id>
-			<name>Frank Groeneveld</name>
-			<email>frankgroeneveld@gmail.com</email>
-			<url>http://techfield.org/</url>
-			<organization>SWERL, TU Delft</organization>
-			<organizationUrl>http://swerl.tudelft.nl</organizationUrl>
-			<timezone>+1</timezone>
-		</developer>
-		<developer>
-			<id>lenselinkstefan</id>
-			<name>Stefan Lenselink</name>
-			<email>S.R.Lenselink@student.tudelft.nl</email>
-			<url>http://bu130.nl</url>
-			<organization>SWERL, TU Delft</organization>
-			<organizationUrl>http://swerl.tudelft.nl</organizationUrl>
-			<timezone>+1</timezone>
-		</developer>
-		<developer>
-			<id>arie.van.deursen</id>
-			<name>Arie van Deursen</name>
-			<email>arie.vanDeursen@tudelft.nl</email>
-			<url>http://www.st.ewi.tudelft.nl/~arie/</url>
-			<organization>SWERL, TU Delft</organization>
-			<organizationUrl>http://swerl.tudelft.nl</organizationUrl>
-			<timezone>+1</timezone>
-		</developer>
 		<developer>
 			<id>aminmf</id>
 			<name>Amin Milani Fard</name>
 			<email>aminmf@ece.ubc.ca</email>
-			<url>http://ece.ubc.ca/~aminmf/</url>
-			<organization>UBC</organization>
-			<organizationUrl>http://ece.ubc.ca</organizationUrl>
-			<timezone>+1</timezone>
+			<organization>SALT Lab, ECE, UBC</organization>
+			<organizationUrl>http://salt.ece.ubc.ca/</organizationUrl>
 		</developer>
-
 	</developers>
 
 	<dependencies>

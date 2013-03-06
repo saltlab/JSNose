@@ -46,9 +46,7 @@ public class Crawler implements Runnable {
 	enum CrawlStrategy {
 		DFS, BFS, Rand, Div
 	}
-	private boolean pauseFlag = true;
-	private boolean strategicCrawl = false;
-
+	private boolean strategicCrawl = true;
 
 	private static final Logger LOGGER = Logger.getLogger(Crawler.class.getName());
 
@@ -349,7 +347,7 @@ public class Crawler implements Runnable {
 						this.controller.getStrippedDom(getBrowser()), backTrackPath);
 
 
-			boolean getCoverage = false;
+			boolean getCoverage = true;
 			
 			if (getCoverage){
 				//Amin: calculate code coverage
@@ -591,42 +589,6 @@ public class Crawler implements Runnable {
 		return true;
 	}
 
-
-	/**
-	 * Added by Amin for diverse crawling
-	 * This is to pause a crawler after each time a new state is detected.
-	 */
-	void pauseCrawling(){
-		try {
-			synchronized(this){
-				while(pauseFlag){// should not be here!!
-					LOGGER.info("Wait until notified...");
-					controller.addToWaitingCrawlerList(this);
-					wait();
-					pauseFlag = false;
-					LOGGER.info("Resume crawling!");
-				}
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-	/**
-	 * Added by Amin for diverse crawling
-	 * This is to notify a crawler to resume if its state is diverse.
-	 */
-	void resumeCrawling(){
-		try {
-			synchronized(this){
-				pauseFlag = false;
-				System.out.println(name);
-				LOGGER.info("Notified " + this.name + " to continue crawling!");
-				notify();
-			}
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 
 	/**
@@ -941,7 +903,7 @@ public class Crawler implements Runnable {
 			ArrayList<StateVertix> notFullExpandedStates = sfg.getNotFullExpandedStates();
 
 			// setting the crawl strategy
-			CrawlStrategy strategy = CrawlStrategy.BFS;
+			CrawlStrategy strategy = CrawlStrategy.Div;
 
 			// choose next state to crawl based on the strategy
 			StateVertix nextToCrawl = nextStateToCrawl(strategy);
@@ -1107,7 +1069,7 @@ public class Crawler implements Runnable {
 			break;
 		case Div:
 			if (notFullExpandedStates.size()>0){
-				//index = nextForDiverseCrawlingCovOnly();
+				index = nextForDiverseCrawlingCovOnly();
 				//index = nextForDiverseCrawlingDDOnly();
 				//index = nextForDiverseCrawlingPDOnly();
 
@@ -1115,7 +1077,7 @@ public class Crawler implements Runnable {
 				//index = nextForDiverseCrawlingCo_DD(1.0, 1.0);
 				//index = nextForDiverseCrawling(1.0, 1.0);  // PD+DD
 
-				index = nextForDiverseCrawling3(1.0,1.0,1.0); // all
+				//index = nextForDiverseCrawling3(1.0,1.0,1.0); // all
 			}
 			break;
 		default:

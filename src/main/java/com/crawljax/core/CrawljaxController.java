@@ -54,8 +54,8 @@ public class CrawljaxController implements CrawlQueueManager {
 	private boolean efficientCrawling = false;
 	private boolean randomEventExec = false;
 	private Map<String,ArrayList<Integer>> JSCountList = new Hashtable<String,ArrayList<Integer>>(); 
-	private FileWriter fstream, fstreamEstimation;
-	private BufferedWriter out, outEstimation;
+	private FileWriter fstream;
+	private BufferedWriter out;
 	private double coverage = 0.0;
 
 	
@@ -117,26 +117,6 @@ public class CrawljaxController implements CrawlQueueManager {
 		}
 		return coverage;
 	}	
-
-	/**
-	 * Amin: Dump state-space estimation data into file
-	 */
-	public void writeEstimationToFile(String est) {
-		try{
-			StateFlowGraph stateFlowGraph = this.getSession().getStateFlowGraph();
-
-			long timeCrawlCalc = System.currentTimeMillis() - startCrawl;
-
-			DecimalFormat df = new DecimalFormat("##.##");
-			//"Time\t #Clicks\t #Links\t #States\t estCov actCov codeCov"
-			outEstimation.write(timeCrawlCalc/1000 + "\t" + elementChecker.numberOfExaminedElements() + "\t"
-					+ stateFlowGraph.getAllEdges().size() + "\t" + stateFlowGraph.getAllStates().size() + "\t" + est + "\t" + df.format( coverage*100 ) + "\n");
-			
-		}catch(Exception e){
-			LOGGER.info("IO exception!");
-			e.printStackTrace();
-		}
-	}
 
 	
 	public boolean isDiverseCrawling() {
@@ -203,14 +183,9 @@ public class CrawljaxController implements CrawlQueueManager {
 		this.randomEventExec = config.getCrawlSpecification().isRandomEventExec();
 
 		try {
-			this.fstream = new FileWriter("CwarlStat.txt", true);
+			this.fstream = new FileWriter("CodeSmells.txt", true);
 			this.out = new BufferedWriter(fstream);
 
-			this.fstreamEstimation = new FileWriter("estimation.txt", true);
-			this.outEstimation = new BufferedWriter(fstreamEstimation);
-			
-			outEstimation.write("Time\t#Clicks\t#Links\t#States\testCov\tactCov\tcodeCov\n");
-		
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -308,93 +283,6 @@ public class CrawljaxController implements CrawlQueueManager {
 		return false;
 	}	
 	
-	/**
-	 * Added by Amin
-	 * This is a main method for diverse crawling which decides about crawlers to resume crawling.
-	 * It calculates pair-wise diversity for states of waiting crawlers 
-	 * 
-	 * 	 @param PD_weight
-	 *            the user defined weight for path-diversity
-	 *   @param DD_weight
-	 *            the user defined weight for DOM-diversity
-	 */	
-	public void notifyWaitingCrawlers(double PD_weight, double DD_weight){
-		StateFlowGraph stateFlowGraph = this.getSession().getStateFlowGraph();
-		
-		ArrayList<Double> minPathDiv = new ArrayList<Double>();
-		double minDD=1.0, DD, AvgMinDD=0.0;
-		
-		ArrayList<Double> minDOMDiv = new ArrayList<Double>();
-		double minPD=1.0, PD, AvgMinPD=0.0;
-
-		double AvgTotalDiv = 0.0; 
-		
-		// calculating minimum pair-wise Path-diversity and pair-wise DOM-diversity
-		// Amin: TODO may need to check path-diversity w.r.t all states in the SFG
-		for (int i=0; i < waitingCrawlerList.size(); i++){
-			minDD = stateFlowGraph.getMinDOMDiversity(waitingCrawlerList.get(i).getStateMachine().getCurrentState());
-			LOGGER.info("***** From  StateFlowGraph : minDD of state " +  waitingCrawlerList.get(i).getStateMachine().getCurrentState().getName() 
-					+ " is " + minDD);
-			
-			for (int j=0; j < waitingCrawlerList.size(); j++){
-				if (waitingCrawlerList.get(i).getStateMachine().getCurrentState()!=waitingCrawlerList.get(j).getStateMachine().getCurrentState()){
-					PD = stateFlowGraph.getPathDiversity(waitingCrawlerList.get(i).getStateMachine().getCurrentState()
-							, waitingCrawlerList.get(j).getStateMachine().getCurrentState());
-					
-					// Amin: No need for this part anymore
-					//DD = stateFlowGraph.getDomDiversity(waitingCrawlerList.get(i).getStateMachine().getCurrentState()
-					//		, waitingCrawlerList.get(j).getStateMachine().getCurrentState());
-
-					LOGGER.info("PD of state " +  waitingCrawlerList.get(i).getStateMachine().getCurrentState().getName() 
-							+ " and state " +  waitingCrawlerList.get(j).getStateMachine().getCurrentState().getName() + " is " + PD);
-					if (PD < minPD)
-						minPD = PD;
-					
-					// Amin: No need for this part anymore
-					//LOGGER.info("DD of state " +  waitingCrawlerList.get(i).getStateMachine().getCurrentState().getName() 
-					//		+ " and state " +  waitingCrawlerList.get(j).getStateMachine().getCurrentState().getName() + " is " + DD);
-					//if (DD < minDD)
-					//	minDD = DD;
-				}
-			}
-
-			LOGGER.info("minPD of state " +  waitingCrawlerList.get(i).getStateMachine().getCurrentState().getName() + " is " + minPD);
-			minPathDiv.add(minPD);
-			AvgMinPD += minPD;
-			minPD=1.0;
-
-			LOGGER.info("minDD of state " +  waitingCrawlerList.get(i).getStateMachine().getCurrentState().getName() + " is " + minDD);
-			minDOMDiv.add(minDD);
-			AvgMinDD += minDD;
-			minDD=1.0;
-		}
-		AvgMinPD /= waitingCrawlerList.size();
-		LOGGER.info("AvgMinPD is " +  AvgMinPD);
-
-		AvgMinDD /= waitingCrawlerList.size();
-		LOGGER.info("AvgMinDD is " +  AvgMinDD);
-
-		// average total diversity score
-		AvgTotalDiv = PD_weight*AvgMinPD + DD_weight*AvgMinDD;
-		LOGGER.info("AvgTotalDiv is " +  AvgTotalDiv);
-		
-		ArrayList<Crawler> releasedCrawler = new ArrayList<Crawler>();
-		for (int i=0; i < waitingCrawlerList.size(); i++){
-			if (DD_weight*minPathDiv.get(i) + DD_weight*minDOMDiv.get(i) >= AvgTotalDiv){
-
-				LOGGER.info("Diversity score of state " +  waitingCrawlerList.get(i).getStateMachine().getCurrentState().getName() 
-						+ " is "  + (DD_weight*minPathDiv.get(i) + DD_weight*minDOMDiv.get(i)) + ", so it is notified!");
-				
-				waitingCrawlerList.get(i).resumeCrawling();
-				releasedCrawler.add(waitingCrawlerList.get(i));
-			}
-		}
-		
-		for (int i=0; i < releasedCrawler.size(); i++)
-			waitingCrawlerList.remove(releasedCrawler.get(i));
-		releasedCrawler.clear();
-
-	}	
 	
 	
 	
@@ -618,7 +506,6 @@ public class CrawljaxController implements CrawlQueueManager {
 			out.write("Dom average size (byte): " + stateFlowGraph.getMeanStateStringSize() + "\n");
 			
 			out.close();
-			outEstimation.close();
 		} catch (IOException e) {
 			LOGGER.info("Could not write into the stat file!");
 			e.printStackTrace();

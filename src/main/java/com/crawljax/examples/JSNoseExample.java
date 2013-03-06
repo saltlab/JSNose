@@ -17,21 +17,59 @@ import com.crawljax.core.configuration.Form;
 
 
 /**
- * Simple Example.
+ * Simple JSNose Example.
  * 
- * @author dannyroest@gmail.com (Danny Roest)
+ * @author aminmf@ece.ubc.ca (Amin Milani Fard)
  * @version $id$
  */
-public final class CrawljaxSimpleExampleSettings {
+public final class JSNoseExample {
 
-	private static final String URL = "http://spci.st.ewi.tudelft.nl/demo/aowe/"; 
+	//Amin settings for ICSM paper
+	private static boolean doDiverseCrawling = true;	// default should be false
+	private static boolean doEfficientCrawling = true;	// default should be false
+	private static boolean doRandomEventExec = false;   // set it true for randomizing event execution
+	private static boolean doClickOnce = false;         // true: click only once on each clickable, false: multiple click
+	
+	//Final selected experimental objects
+	//private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
+	private static final String URL = "http://localhost/chess/index.html"; // chessGame
+	//private static final String URL = "http://127.0.0.1:8081/ajaxfilemanagerv_tinymce1.1/tinymce_test.php";  // TinyMCE
+	//private static final String URL = "http://localhost:8080/tudu-dwr/";   // TuduList
+
+	
+	//  For experiments on computing SFG DDPD cluster
+	//private static final int MAX_RUNTIME = 3600; 
+	//private static final int MAX_NUMBER_STATES = 50;  // for PhotoGallary
+	//private static final int MAX_NUMBER_STATES = 20;  // for Chessgame
+	//private static final int MAX_NUMBER_STATES = 15;  // for tudu
+	//private static final int MAX_NUMBER_STATES = 25;  // for TinyMCE
+
+	
+	//  For experiments on computing coverage and SFG size
+	private static final int MAX_NUMBER_STATES = 10000;
+	private static final int MAX_RUNTIME = 300;
+	
+	
+	//private static final int MAX_DEPTH = 3;
+	private static final int MAX_DEPTH = 0; // this indicates no depth-limit
+
+	//private static final String URL = "http://spci.st.ewi.tudelft.nl/demo/aowe/"; 
+	//private static final String URL = "http://localhost/ptable/";  // PeriodicTable
+	//private static final String URL = "http://localhost/artemis/ajaxtabscontent/ajaxtabscontent/demo.htm";
+	//private static final String URL = "http://localhost/tinymce_3.5.7_jquery/%5Ctinymce/examples/";
+	//private static final String URL = "http://localhost/5/";  //
 	//private static final String URL = "http://localhost/aowe/";  // from http://spci.st.ewi.tudelft.nl/demo/aowe/
+	//private static final String URL = "http://spci.st.ewi.tudelft.nl/demo/aowe/";
+	//private static final String URL = "http://localhost/same-game/";  // SameGame
+	//private static final String URL = "http://localhost/artemis/ball_pool/ball_pool/index.html";  // BallPool
+	//private static final String URL = "http://127.0.0.1:8081/fractal_viewer/fractal_viewer/";  //FractalViewer
+	//private static final String URL = "http://localhost/tictactoe2/tictacgame_Even_Smarter_3.htm";  //TicTacToe
+	//private static final String URL = "http://localhost/listo/";  // AjaxList
+	//private static final String URL = "http://127.0.0.1:8081/TinySiteXml/";  // Small Ajax site
+	//private static final String URL = "http://localhost/ria/"; // from http://ssrg.eecs.uottawa.ca/TestRIA/
 
-		
-	private static final int MAX_DEPTH = 0;
-	private static final int MAX_NUMBER_STATES = 100;
+	private JSNoseExample() {
 
-	private CrawljaxSimpleExampleSettings() {
 	}
 
 	private static CrawljaxConfiguration getCrawljaxConfiguration() {
@@ -42,8 +80,17 @@ public final class CrawljaxSimpleExampleSettings {
 		config.setBrowser(BrowserType.firefox);
 		
 			
-		//config.setBrowser(BrowserType.chrome);
-		//System.setProperty("webdriver.chrome.driver" , "....put address of chromedriver here....");
+		// Amin: Create a Proxy for the purpose of code instrumentation to measure js code coverage
+		config.setProxyConfiguration(new ProxyConfiguration());
+		WebScarabWrapper web = new WebScarabWrapper();
+		config.addPlugin(web);
+		JSModifyProxyPlugin modifier = new JSModifyProxyPlugin(new AstInstrumenter());
+		modifier.excludeDefaults();
+		web.addPlugin(modifier);
+		
+		
+		//config.addPlugin(new TestSuiteGenerator());
+
 		
 		return config;
 	}
@@ -59,14 +106,21 @@ public final class CrawljaxSimpleExampleSettings {
 	private static CrawlSpecification getCrawlSpecification() {
 		CrawlSpecification crawler = new CrawlSpecification(URL);
 
-		//crawler.setMaximumRuntime(300);
+		crawler.setMaximumRuntime(MAX_RUNTIME); 		
 		
-		//crawler.setClickOnce(false);  // false: multiple click, true: click only once on each clickable
+		crawler.setDiverseCrawling(doDiverseCrawling);  // setting the guided crawling
+		crawler.setClickOnce(doClickOnce);       		// setting if should click once/multiple time on each clickable
+		
+		// doRandomEventExec and doEfficientCrawling should not be both true!
+		if (doRandomEventExec){
+			crawler.setRandomEventExec(true);
+		}else if (doEfficientCrawling){
+			crawler.setEfficientCrawling(true);
+			crawler.setClickOnce(false);
+		}
 
-		// click these elements
-		boolean tudu = false; // Amin: set tudu=true only if URL = "http://localhost:8080/tudu-dwr/";
-
-		if (!tudu){
+	
+		if (!URL.equals("http://localhost:8080/tudu-dwr/")){
 			// default order of clicks on candidate clickable
 			crawler.clickDefaultElements();
 			crawler.click("a");
@@ -80,7 +134,7 @@ public final class CrawljaxSimpleExampleSettings {
 			Form form=new Form();
 			Form addList=new Form();
 			form.field("j_username").setValue("amin");
-			form.field("j_password").setValue("aminpass");
+			form.field("j_password").setValue("editor");
 			form.field("dueDate").setValue("10/10/2010");
 			form.field("priority").setValue("10");
 			//addList.field("description").setValue("test");
@@ -109,7 +163,7 @@ public final class CrawljaxSimpleExampleSettings {
 		crawler.dontClick("a").underXPath("//DIV[@id='guser']");
 		crawler.dontClick("a").withText("Language Tools");
 		
-		if (!tudu)
+		if (!URL.equals("http://localhost:8080/tudu-dwr/"))
 			crawler.setInputSpecification(getInputSpecification());
 
 		// limit the crawling scope

@@ -31,8 +31,8 @@ public final class JSNoseExample {
 	private static boolean doClickOnce = false;         // true: click only once on each clickable, false: multiple click
 	
 	//Final selected experimental objects
-	//private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
-	private static final String URL = "http://localhost/chess/index.html"; // chessGame
+	private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
+	//private static final String URL = "http://localhost/chess/index.html"; // chessGame
 	//private static final String URL = "http://127.0.0.1:8081/ajaxfilemanagerv_tinymce1.1/tinymce_test.php";  // TinyMCE
 	//private static final String URL = "http://localhost:8080/tudu-dwr/";   // TuduList
 
@@ -76,20 +76,16 @@ public final class JSNoseExample {
 		CrawljaxConfiguration config = new CrawljaxConfiguration();
 		config.setCrawlSpecification(getCrawlSpecification());
 		config.setThreadConfiguration(getThreadConfiguration());
-		// config.setBrowser(BrowserType.android);
 		config.setBrowser(BrowserType.firefox);
 		
 			
-		// Amin: Create a Proxy for the purpose of code instrumentation to measure js code coverage
+		// Amin: Create a Proxy for the purpose of code instrumentation
 		config.setProxyConfiguration(new ProxyConfiguration());
 		WebScarabWrapper web = new WebScarabWrapper();
 		config.addPlugin(web);
 		JSModifyProxyPlugin modifier = new JSModifyProxyPlugin(new AstInstrumenter());
 		modifier.excludeDefaults();
 		web.addPlugin(modifier);
-		
-		
-		//config.addPlugin(new TestSuiteGenerator());
 
 		
 		return config;

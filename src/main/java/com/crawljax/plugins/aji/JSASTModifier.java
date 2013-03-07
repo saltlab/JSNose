@@ -31,6 +31,8 @@ import org.mozilla.javascript.CompilerEnvirons;
 import org.mozilla.javascript.Parser;
 import org.mozilla.javascript.ast.*;
 
+import codesmells.SmellDetector;
+
 import com.crawljax.core.CrawljaxController;
 import com.crawljax.plugins.aji.executiontracer.ProgramPoint;
 
@@ -270,6 +272,13 @@ public abstract class JSASTModifier implements NodeVisitor {
 	 */
 	//@Override
 	public boolean visit(AstNode node) {
+		
+		//Amin: This is to analyse AST for detecting code smells before JS code instrumentation
+		SmellDetector smellDetector = new SmellDetector(node);
+		smellDetector.analyseAST();
+		
+		
+		
 		FunctionNode func;
 		
 		if (!((node instanceof FunctionNode || node instanceof ReturnStatement || node instanceof SwitchCase || node instanceof AstRoot || node instanceof ExpressionStatement || node instanceof BreakStatement || node instanceof ContinueStatement || node instanceof ThrowStatement || node instanceof VariableDeclaration))) {// || node instanceof ExpressionStatement || node instanceof BreakStatement || node instanceof ContinueStatement || node instanceof ThrowStatement || node instanceof VariableDeclaration || node instanceof ReturnStatement || node instanceof SwitchCase)) {

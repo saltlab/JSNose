@@ -94,8 +94,8 @@ public class InitialCrawler extends Crawler {
 		stateFlowGraph.setDiverseCrawling(controller.isDiverseCrawling());
 		stateFlowGraph.setEfficientCrawling(controller.isEfficientCrawling());
 
-		
-		boolean getCoverage = false;
+		// this is to initialize coverage increase
+		boolean getCoverage = true;
 
 		if (getCoverage){
 			// Amin: Calculate initial code coverage

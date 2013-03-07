@@ -41,12 +41,13 @@ public class SmellDetector {
 			return;
 		}
 
+		
 		if (ASTNode instanceof FunctionNode) {
 			func = (FunctionNode) ASTNode;
 			// JSNOSE - Amin: long parameter list
 			if (func.getParams().size() >= 0){
 				System.out.println("function " + func.getName() + " has " + 
-						func.getParams().size() + " parameters in line " + func.getLineno());
+						func.getParams().size() + " parameters in line " + func.getLineno()+1);
 			
 				System.out.println("also it has " + func.getParamCount());
 			}

@@ -437,7 +437,8 @@ public abstract class JSASTModifier implements NodeVisitor {
 						parent.addChildBefore(newNode, node);
 					}
 					catch (NullPointerException npe) {
-						System.out.println(npe.getMessage());
+						//System.out.println(npe.getMessage());
+						//System.out.println("Could not add child node" + newNode.toSource() + " to parent node " + node.toSource());
 					}
 				}
 			}

@@ -3,6 +3,9 @@ package codesmells;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.mozilla.javascript.CompilerEnvirons;
 import org.mozilla.javascript.Context;
@@ -13,8 +16,12 @@ import org.mozilla.javascript.ast.*;
 
 public class SmellDetector {
 
+	// JSNose parameters for smell detection
+	private static final int MAX_METHID_LENGTH = 20;
+	private static final int MAX_NUMBERS_OF_PARAMETERS = 4;
+
+	
 	private AstNode ASTNode = null;
-	private int m_rootCount = 0;
 	
 	
 	public SmellDetector(AstNode node) {
@@ -26,6 +33,7 @@ public class SmellDetector {
 	 * Analysing abstract syntax tree for code smells.
 	 * This is to the following smells:
 	 * 1. long list of parameters
+	 * 2. long methods
 	 *
 	 * 
 	 * @param node
@@ -33,7 +41,6 @@ public class SmellDetector {
 	 */
 	public void analyseAST() {
 		
-		FunctionNode func;
 		
 		if (!((ASTNode instanceof FunctionNode || ASTNode instanceof ReturnStatement || ASTNode instanceof SwitchCase || 
 				ASTNode instanceof AstRoot || ASTNode instanceof ExpressionStatement || ASTNode instanceof BreakStatement || 
@@ -41,27 +48,68 @@ public class SmellDetector {
 			return;
 		}
 
-		
+
 		if (ASTNode instanceof FunctionNode) {
-			func = (FunctionNode) ASTNode;
-			// JSNOSE - Amin: long parameter list
-			if (func.getParams().size() >= 0){
-				System.out.println("function " + func.getName() + " has " + 
-						func.getParams().size() + " parameters in line " + func.getLineno()+1);
-			
-				System.out.println("also it has " + func.getParamCount());
-			}
-			
+			isLongMethod();
+			hasManyParameters();
 		}
+
+		
+		// JSNOSE - Amin: switch case
+		else if (ASTNode instanceof SwitchCase) {
+			//Add block around all statements in the switch case
+			SwitchCase sc = (SwitchCase)ASTNode;
+			List<AstNode> statements = sc.getStatements();
+			List<AstNode> blockStatement = new ArrayList<AstNode>();
+			Block b = new Block();
+			
+			if (statements != null) {
+				Iterator<AstNode> it = statements.iterator();
+				while (it.hasNext()) {
+					AstNode stmnt = it.next();
+					b.addChild(stmnt);
+				}
+				
+				blockStatement.add(b);
+				sc.setStatements(blockStatement);
+			}
+		
+		}
+
 		return;
 	}
 
 
+	/*
+	 * Detecting long parameter list
+	 */
+	private boolean hasManyParameters(){
+		FunctionNode func = (FunctionNode) ASTNode;
+		if (func.getParams().size() >= MAX_NUMBERS_OF_PARAMETERS){
+			System.out.println("function " + func.getName() + " has " + 
+					func.getParams().size() + " parameters in line " + (func.getLineno()+1));
+
+			//System.out.println("also it has " + func.getParamCount());
+			return true;
+		}
+		return false;
+	}
+
+	/*
+	 * Detecting long method/function
+	 */
+	private boolean isLongMethod(){
+		FunctionNode func = (FunctionNode) ASTNode;
+		if (func.getEndLineno() - func.getLineno() > MAX_METHID_LENGTH){
+			System.out.println("This functtion is large. Starts from line " + (func.getLineno()+1) + " to line " + (func.getEndLineno()+1));
+			return true;
+		}
+		return false;
+	}
 	
+
 	
-	
-	
-	private void findFunctions(String input, String scopename) {
+	public void findFunctions(String input, String scopename) {
 		try {
 			AstRoot ast = null;
 

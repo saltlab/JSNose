@@ -8,6 +8,8 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 
+import codesmells.JavaScriptObjectInfo;
+
 import com.crawljax.browser.EmbeddedBrowser;
 import com.crawljax.core.configuration.CrawljaxConfigurationReader;
 import com.crawljax.core.exception.BrowserConnectionException;
@@ -339,6 +341,98 @@ public class Crawler implements Runnable {
 		//this.controller.writeEstimationToFile( est ); // est : estimated and actual state-space coverage 
 		CrawljaxController.NumCandidateClickables--;
 
+		
+		// extracting true objects in javaScript
+		ArrayList<JavaScriptObjectInfo> jsObjects = new ArrayList<JavaScriptObjectInfo>();
+		for (String candidateJSObject : JSModifyProxyPlugin.getcandidateJSObjectList()){
+			try{
+			Object isObject =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"object\") return true;");
+			//System.out.println(isObject + " "+candidateJSObject);
+			if (isObject!=null && isObject.toString().equals("true")){
+				System.out.println(candidateJSObject + " is an object!");
+				JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0);
+				
+				//Adding properties and prototype to the newJSObj
+
+				Object ownPropertiesArray =  this.browser.executeJavaScript("" +
+						"var ownPropertiesArray = []; " +
+						"for (var property in " + candidateJSObject + "){" +
+							"if (" + candidateJSObject + ".hasOwnProperty(property)){" +
+								"ownPropertiesArray.push(property); " +
+							"}" +
+						"} " +
+						" return ownPropertiesArray;");
+				
+				Object inheritedPropertiesArray =  this.browser.executeJavaScript("" +
+						"var inheritedPropertiesArray = []; " +
+						"for (var property in " + candidateJSObject + "){" +
+							"if (!" + candidateJSObject + ".hasOwnProperty(property)){" +
+								"inheritedPropertiesArray.push(property); " +
+							"}" +
+						"} " +
+						" return inheritedPropertiesArray;");
+
+				
+				//System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
+				//System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
+				
+				ArrayList ownProperties = (ArrayList) ownPropertiesArray;
+				ArrayList inheritedProperties = (ArrayList) inheritedPropertiesArray;
+				
+				for (int i=0;i<ownProperties.size();i++){
+					//System.out.println((String)ownProperties.get(i).toString());
+					newJSObj.addOwnProperty((String)ownProperties.get(i).toString());
+				}
+
+				for (int i=0;i<inheritedProperties.size();i++){
+					//System.out.println((String)inheritedProperties.get(i).toString());
+					newJSObj.addInheritedPropetries((String)inheritedProperties.get(i).toString());
+				}
+
+				
+				//Adding prototype chain to the newJSObj
+				Object prototype;
+//				if (!candidateJSObject.equals("document")){
+				if (candidateJSObject.equals("dog")){
+					prototype =  this.browser.executeJavaScript("" +
+						" return " + candidateJSObject + ";");
+						//" return Object.getPrototypeOf(" + candidateJSObject + ");");
+					System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+
+					prototype =  this.browser.executeJavaScript("" +
+							" return Object.getPrototypeOf(" + candidateJSObject + ");");
+					System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+
+					prototype =  this.browser.executeJavaScript("" +
+							" return Object.getPrototypeOf(Object.getPrototypeOf(" + candidateJSObject + "));");
+					System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+				
+
+					//prototype =  this.browser.executeJavaScript("" +
+					//		" return Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(" + candidateJSObject + ")));");
+					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+
+					
+					Object prototypeChain =  this.browser.executeJavaScript("" +
+							"var prototypeChainArray = []; " +
+							"prototypeChainIterator = " + candidateJSObject + ";" +
+							"while (prototypeChainIterator != null) {" +
+							    "prototypeChainIterator = Object.getPrototypeOf(prototypeChainIterator);"+
+							    "prototypeChainArray.push(prototypeChainIterator);"+
+							"}"+
+							" return prototypeChainArray;");
+					System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
+				
+				}
+			}
+			}catch (Exception e) {
+				LOGGER.info("Could not execute script");
+			}
+		}
+
+
+		
+		
 
 		if (this.fireEvent(eventable)) {
 			StateVertix newState =
@@ -347,21 +441,25 @@ public class Crawler implements Runnable {
 						this.controller.getStrippedDom(getBrowser()), backTrackPath);
 
 
+			// ALWAYS BE TRUE FOR THIS PROJECT
 			boolean getCoverage = true;
 			
 			if (getCoverage){
 				//Amin: calculate code coverage
 				for (String modifiedJS : JSModifyProxyPlugin.getModifiedJSList()){
 					//System.out.println("MODIFIED CODES ARE: " + modifiedJS);
-					try{
+					/*try{
 						Object counter =  this.browser.executeJavaScript("return " + modifiedJS + "_counter;");
-						ArrayList countList = (ArrayList) counter;
-
 						this.controller.setCountList(modifiedJS, counter);
 					}catch (Exception e) {
 						LOGGER.info("Could not execute script");
-					}
+					}*/
+
+			
 				}
+	
+				
+				
 				double cov = this.controller.getCoverage();
 
 				if (controller.isDiverseCrawling())

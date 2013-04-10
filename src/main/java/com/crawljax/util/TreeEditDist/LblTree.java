@@ -142,6 +142,29 @@ public class LblTree extends DefaultMutableTreeNode implements Comparable {
 		return sum;
 	}
 		
+	
+	
+	
+	/**
+	 * Constructs an LblTree from a string representation of tree. The
+	 * treeID in the String representation is optional; if no treeID is given,
+	 * the treeID of the returned tree will be NO_ID.
+	 *
+	 * @param s string representation of a tree. Format: "treeID:{root{...}}".
+	 * @return tree represented by s
+	 */
+	public static LblTree fromString(String s) {
+		int treeID = FormatUtilities.getTreeID(s);
+		s = s.substring(s.indexOf(OPEN_BRACKET), s.lastIndexOf(CLOSE_BRACKET) + 1);
+		LblTree node = new LblTree(FormatUtilities.getRoot(s), treeID);
+		Vector c = FormatUtilities.getChildren(s);
+		for (int i = 0; i < c.size(); i++) {
+			node.add(fromString((String)c.elementAt(i)));
+		}
+		return node;
+	}
+	
+	
 	/**
 	 * String representation of a tree. Reverse operation of {@link #fromString(String)}.
 	 * treeID is NO_ID, it is skiped in the string representation.

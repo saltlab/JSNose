@@ -30,6 +30,7 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Parser;
 import org.mozilla.javascript.RhinoException;
 import org.mozilla.javascript.ast.AstRoot;
+import org.mozilla.javascript.ast.ScriptNode;
 import org.owasp.webscarab.httpclient.HTTPClient;
 import org.owasp.webscarab.model.Request;
 import org.owasp.webscarab.model.Response;
@@ -38,8 +39,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import codesmells.SmellDetector;
+
+import com.crawljax.browser.EmbeddedBrowser;
 //import com.crawljax.plugins.aji.executiontracer.JSExecutionTracer;
 import com.crawljax.util.Helper;
+import com.crawljax.util.Tree;
+import com.crawljax.util.TreeNode;
+import com.crawljax.util.TreeEditDist.LblTree;
 
 import java.io.*;
 
@@ -64,10 +71,24 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	// Amin: this is needed for retrieving the corresponding array
 	private static List<String> modifiedJS;
 	
+	/**
+	 * Amin: this list is for keeping name of candidate javascript objects found in the code
+	 * they are called candidate since some my not be actual objects
+	 */
+	private static List<String> candidateJSObjectList;
+
+	private EmbeddedBrowser browser;
+
+	
 	public static List<String> getModifiedJSList(){
 		return modifiedJS;
 	}
 	
+
+	public static List<String> getcandidateJSObjectList(){
+		return candidateJSObjectList;
+	}
+
 	
 	/**
 	 * Construct without patterns.
@@ -78,7 +99,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	public JSModifyProxyPlugin(JSASTModifier modify) {
 		excludeFilenamePatterns = new ArrayList<String>();
 		modifiedJS = new ArrayList<String>();
-
+		candidateJSObjectList = new ArrayList<String>();
 		modifier = modify;
 	}
 
@@ -209,6 +230,17 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			/* parse some script and save it in AST */
 			ast = rhinoParser.parse(new String(input), scopename, 0);
 			
+			//System.out.println(ast.debugPrint());
+			
+			//System.out.println(makeTreeString(ast.debugPrint()));
+			
+			//LblTree lt1 = LblTree.fromString(makeTreeString(ast.debugPrint())); 
+			
+			//lt1.prettyPrint();
+			
+			
+			
+			
 			/*Print out AST root to file*/
 			/*START*/
 			rootCounter++;
@@ -287,9 +319,16 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 
 			modifier.start();
 
+			//System.out.println("printing ast " + ast.toSource());
+
 			/* recurse through AST */
 			ast.visit(modifier);
 
+			
+			SmellDetector.printObject();
+			
+			
+			
 			//if (htmlFound == true) {
 				modifier.finish(ast);
 				
@@ -321,6 +360,148 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 		return input;
 	}
 
+	
+	
+	
+	
+	// Amin: making a string representation for ast
+	private String makeTreeString(String astDebugFormat) {
+		String result = "";
+		String tempRead = "";
+		String objName = "";
+
+		int consecutiveGETPROP = 0;  // to count length of a message chain by counting GETPROPs
+		int spaceCount = 0, newDepth = 0, prevDepth = -1, openBrackets = 0;
+		for (int i=0; i<astDebugFormat.length(); i++){  //finding the next node (at any level)
+			if (astDebugFormat.charAt(i) == '\t'){		// found next element at position i
+				for (int j=i+1; j<astDebugFormat.length(); j++){  //finding the level
+					if (astDebugFormat.charAt(j) == ' ')
+						spaceCount++;
+					else{
+						newDepth = spaceCount/2;
+						spaceCount = 0;
+						for (int b=prevDepth-newDepth; b>=0 ; b--){ // adding "}" as much as depth change
+							result+="}";
+							openBrackets--;
+						}
+						result+="{";
+						openBrackets++;
+						while (astDebugFormat.charAt(j) != ' '){ // adding node type to the result string
+							tempRead+=astDebugFormat.charAt(j);
+							j++;
+						}
+
+						if (tempRead.equals("GETPROP")){
+							consecutiveGETPROP++;
+							// check if long meassage chain found
+							if (consecutiveGETPROP > 2)
+								System.out.println("Long message chain found!");
+							// if previous read was also GETPROP
+							
+						}else{
+							consecutiveGETPROP = 0;
+						}
+
+						
+						if (tempRead.equals("NAME")){
+							// A NAME IS FOUND!
+							// read two numbers and then read the name
+							// TODO: this part is very messy! should be clean later
+							j++;
+							while (astDebugFormat.charAt(j) != ' ') // skipping numbers
+								j++;
+							j++;
+							while (astDebugFormat.charAt(j) != ' ') // skipping numbers
+								j++;
+							j++;
+							objName = "";
+							while (astDebugFormat.charAt(j) != '\n'){ // adding node type to the result string
+								objName+=astDebugFormat.charAt(j);
+								j++;
+							}
+
+							if (!candidateJSObjectList.contains(objName)){
+								candidateJSObjectList.add(objName);
+								//System.out.println("objName: " + objName);
+							}
+						}
+						
+						
+						if (tempRead.equals("OBJECTLIT")){
+							//objName
+							//System.out.println(objName + " is an object literal");
+						}
+						
+						result += tempRead;
+						tempRead="";
+						break;
+					}				
+				}
+				prevDepth = newDepth;
+			}
+		}
+		
+		
+		for (int i=0;i<openBrackets;i++)
+			result+="}";
+		
+		System.out.println(result);
+		
+				
+		return result;
+	}
+
+
+	
+	// Amin: making a string representation for ast
+	private void makeTree(String astDebugFormat) {
+		
+		Tree<String> t = new Tree<String>();
+		TreeNode<String> n = new TreeNode<String>();
+		n.setData("root");
+		t.setRootElement(n);
+
+		TreeNode<String> n2 = new TreeNode<String>();
+		n2.setData("ch1");
+		n.addChild(n2);
+		n.addChild(n2);
+		
+		System.out.println(t.toString());
+		
+		
+		String result = "";
+		int spaceCount = 0, newDepth = 0, prevDepth = -1, openBrackets = 0;
+		for (int i=0; i<astDebugFormat.length(); i++){  //finding the next node (at any level)
+			if (astDebugFormat.charAt(i) == '\t'){		// found next element at position i
+				for (int j=i+1; j<astDebugFormat.length(); j++){  //finding the level
+					if (astDebugFormat.charAt(j) == ' ')
+						spaceCount++;
+					else{
+						newDepth = spaceCount/2;
+						spaceCount = 0;
+						for (int b=prevDepth-newDepth; b>=0 ; b--){ // adding "}" as much as depth change
+							result+="}";
+							openBrackets--;
+						}
+						result+="{";
+						openBrackets++;
+						while (astDebugFormat.charAt(j) != ' '){ // adding node type to the result string
+							result+=astDebugFormat.charAt(j);
+							j++;
+						}
+						break;
+					}				
+				}
+				prevDepth = newDepth;
+			}
+		}
+		
+		
+	}
+
+	
+	
+	
 	//Amin: This is used to name the array which stores execution count for the scope in URL 
 	private String getJSName(String URL) {
 		int index = URL.lastIndexOf('/');

@@ -29,23 +29,33 @@ import java.util.Iterator;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.CompilerEnvirons;
 import org.mozilla.javascript.Parser;
+import org.mozilla.javascript.Token;
 import org.mozilla.javascript.ast.*;
 
 import codesmells.SmellDetector;
 
 import com.crawljax.core.CrawljaxController;
 import com.crawljax.plugins.aji.executiontracer.ProgramPoint;
+import com.crawljax.util.Tree;
+import com.crawljax.util.TreeNode;
 
 /**
  * Abstract class that is used to define the interface and some functionality for the NodeVisitors
  * that modify JavaScript.
  * 
+ * @author Aimin Milani Fard
  * @author Frank Groeneveld
- * @version $Id: JSASTModifier.java 6161 2009-12-16 13:47:15Z frank $
  */
 public abstract class JSASTModifier implements NodeVisitor {
 
 	private final Map<String, String> mapper = new HashMap<String, String>();
+	
+	//Amin
+	private Tree<String> tree = new Tree<String>();
+    private ArrayList<TreeNode<String>> treeNodes = new ArrayList<TreeNode<String>>();
+	private SmellDetector smellDetector = new SmellDetector();
+
+	
 
 	protected static final Logger LOGGER = Logger.getLogger(CrawljaxController.class.getName());
 	
@@ -262,7 +272,30 @@ public abstract class JSASTModifier implements NodeVisitor {
 	 */
 	protected abstract AstNode createNode(AstRoot root, String postfix, int lineNo, int rootCount);
 
+	
+	
+	//@Override
+	public boolean visit(AstNode node) {
+		
+		
+		//Amin: This is to analyse AST for detecting code smells before JS code instrumentation
+		smellDetector.SetASTNode(node);
+		smellDetector.analyseAstNode();		
+		
+		
+		//TreeNode<String> n = new TreeNode<String>();
+		//n.setData(node.shortName());
+		//tree.setRootElement(n);
 
+		//TreeNode<String> n2 = new TreeNode<String>();
+		//n2.setData(node.shortName());
+		//n.addChild(n2);
+		
+		//System.out.println(tree.toString());
+		return true;
+	}
+	
+	
 	/**
 	 * Actual visiting method.
 	 * 
@@ -271,13 +304,7 @@ public abstract class JSASTModifier implements NodeVisitor {
 	 * @return Whether to visit the children.
 	 */
 	//@Override
-	public boolean visit(AstNode node) {
-		
-		//Amin: This is to analyse AST for detecting code smells before JS code instrumentation
-		SmellDetector smellDetector = new SmellDetector(node);
-		smellDetector.analyseAST();
-		
-		
+	public boolean visit2(AstNode node) {
 		
 		FunctionNode func;
 		

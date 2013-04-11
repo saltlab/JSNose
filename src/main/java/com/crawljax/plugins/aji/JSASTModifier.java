@@ -276,12 +276,10 @@ public abstract class JSASTModifier implements NodeVisitor {
 	
 	//@Override
 	public boolean visit(AstNode node) {
-		
-		
 		//Amin: This is to analyse AST for detecting code smells before JS code instrumentation
 		smellDetector.SetASTNode(node);
 		smellDetector.analyseAstNode();		
-		
+		//smellDetector.analyseObjecsList();
 		
 		//TreeNode<String> n = new TreeNode<String>();
 		//n.setData(node.shortName());

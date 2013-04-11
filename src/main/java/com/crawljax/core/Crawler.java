@@ -373,8 +373,8 @@ public class Crawler implements Runnable {
 						" return inheritedPropertiesArray;");
 
 				
-				//System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
-				//System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
+				System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
+				System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
 				
 				ArrayList ownProperties = (ArrayList) ownPropertiesArray;
 				ArrayList inheritedProperties = (ArrayList) inheritedPropertiesArray;
@@ -392,20 +392,20 @@ public class Crawler implements Runnable {
 				
 				//Adding prototype chain to the newJSObj
 				Object prototype;
-//				if (!candidateJSObject.equals("document")){
-				if (candidateJSObject.equals("dog")){
+				if (!candidateJSObject.equals("document") && !candidateJSObject.equals("top") && !candidateJSObject.equals("window")){
+				//if (candidateJSObject.equals("dog")){
 					prototype =  this.browser.executeJavaScript("" +
 						" return " + candidateJSObject + ";");
 						//" return Object.getPrototypeOf(" + candidateJSObject + ");");
 					System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
 
-					prototype =  this.browser.executeJavaScript("" +
-							" return Object.getPrototypeOf(" + candidateJSObject + ");");
-					System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+					//prototype =  this.browser.executeJavaScript("" +
+					//		" return Object.getPrototypeOf(" + candidateJSObject + ");");
+					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
 
-					prototype =  this.browser.executeJavaScript("" +
-							" return Object.getPrototypeOf(Object.getPrototypeOf(" + candidateJSObject + "));");
-					System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+					//prototype =  this.browser.executeJavaScript("" +
+					//		" return Object.getPrototypeOf(Object.getPrototypeOf(" + candidateJSObject + "));");
+					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
 				
 
 					//prototype =  this.browser.executeJavaScript("" +
@@ -413,17 +413,18 @@ public class Crawler implements Runnable {
 					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
 
 					
-					Object prototypeChain =  this.browser.executeJavaScript("" +
-							"var prototypeChainArray = []; " +
-							"prototypeChainIterator = " + candidateJSObject + ";" +
-							"while (prototypeChainIterator != null) {" +
-							    "prototypeChainIterator = Object.getPrototypeOf(prototypeChainIterator);"+
-							    "prototypeChainArray.push(prototypeChainIterator);"+
-							"}"+
-							" return prototypeChainArray;");
-					System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
-				
+					//Object prototypeChain =  this.browser.executeJavaScript("" +
+					//		"var prototypeChainArray = []; " +
+					//		"prototypeChainIterator = " + candidateJSObject + ";" +
+					//		"while (prototypeChainIterator != null) {" +
+					//		    "prototypeChainIterator = Object.getPrototypeOf(prototypeChainIterator);"+
+					//		    "prototypeChainArray.push(prototypeChainIterator);"+
+					//		"}"+
+					//		" return prototypeChainArray;");
+					//System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
 				}
+				System.out.println();
+
 			}
 			}catch (Exception e) {
 				LOGGER.info("Could not execute script");

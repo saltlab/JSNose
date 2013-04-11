@@ -238,7 +238,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			
 			//lt1.prettyPrint();
 			
-			
+			makeTreeString(ast.debugPrint());
 			
 			
 			/*Print out AST root to file*/

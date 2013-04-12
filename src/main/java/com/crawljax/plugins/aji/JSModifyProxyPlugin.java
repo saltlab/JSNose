@@ -215,6 +215,15 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			return input;
 		}
 		try {
+			if (scopename.contains("script")){
+				
+				SmellDetector.analyseCoupling(input);
+				
+				String[] lines = input.split("\r\n|\r|\n");
+				System.out.println(lines.length);
+				System.out.println(input);
+			}
+
 			AstRoot ast = null;
 
 			/* initialize JavaScript context */
@@ -243,7 +252,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			
 			/*Print out AST root to file*/
 			/*START*/
-			rootCounter++;
+			//rootCounter++;
 			/*try {
 				System.out.println("writing on " + this.jsSourceOutputFolder);
 				File file = new File(this.jsSourceOutputFolder + "/root" + rootCounter + ".js");
@@ -262,55 +271,6 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			}*/
 			/*END*/
 			
-			/*Look for instances of "function" in input then figure out where it ends*/
-			/*START*/
-		/*	String inputCopy = input;
-			
-			int indexOfFuncString = inputCopy.indexOf("function ");
-			while (indexOfFuncString != -1) {
-				String sub = inputCopy.substring(indexOfFuncString);
-				int nextOpenParen = sub.indexOf("(");
-				String funcName = sub.substring(9, nextOpenParen); //"function " has 9 characters
-				
-				int firstOpenBrace = sub.indexOf("{");
-				int countOpenBraces = 1;
-				int countCloseBraces = 0;
-				
-				int endIndex = firstOpenBrace;
-				while (countOpenBraces != countCloseBraces) {
-					endIndex++;
-					if (sub.charAt(endIndex) == '{') {
-						countOpenBraces++;
-					}
-					else if (sub.charAt(endIndex) == '}') {
-						countCloseBraces++;
-					}
-				}
-				
-				String code = sub.substring(0, endIndex+1);
-				
-				//System.out.println(" CODE IS " + code);
-				
-				try {
-					File file = new File(this.jsSourceOutputFolder + "/" + funcName + ".js");
-					if (!file.exists()) {
-						file.createNewFile();
-					}
-					
-					FileOutputStream fop = new FileOutputStream(file);
-					
-					fop.write(code.getBytes());
-					fop.flush();
-					fop.close();
-				}
-				catch (IOException ioe) {
-					System.out.println("IO Exception");
-				}
-				
-				inputCopy = sub.substring(endIndex+1);
-				indexOfFuncString = inputCopy.indexOf("function ");
-			}
-			/*END*/
 
 			//System.out.println("AST BEFORE : ");
 			//System.out.println(ast.toSource());
@@ -360,8 +320,6 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 		return input;
 	}
 
-	
-	
 	
 	
 	// Amin: making a string representation for ast
@@ -424,12 +382,6 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 								candidateJSObjectList.add(objName);
 								//System.out.println("objName: " + objName);
 							}
-						}
-						
-						
-						if (tempRead.equals("OBJECTLIT")){
-							//objName
-							//System.out.println(objName + " is an object literal");
 						}
 						
 						result += tempRead;
@@ -532,7 +484,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			/* instrument the code if possible */
 			response.setContent(modifyJS(new String(response.getContent()), request.getURL().toString()).getBytes());
 		} else if (type != null && type.contains("html")) {
-			if (response.getStatus().equals("200")) {
+			if (response.getStatus().equals("200")) {  // if response is status 200, it is was a bad attempt
 				htmlFound = true;
 			}
 			try {

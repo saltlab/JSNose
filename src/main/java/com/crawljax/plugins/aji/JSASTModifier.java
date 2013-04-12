@@ -55,8 +55,6 @@ public abstract class JSASTModifier implements NodeVisitor {
     private ArrayList<TreeNode<String>> treeNodes = new ArrayList<TreeNode<String>>();
 	private SmellDetector smellDetector = new SmellDetector();
 
-	
-
 	protected static final Logger LOGGER = Logger.getLogger(CrawljaxController.class.getName());
 	
 	/**
@@ -274,12 +272,18 @@ public abstract class JSASTModifier implements NodeVisitor {
 
 	
 	
-	//@Override
+	/**
+	 * AST node visiting method to detect code smells
+	 * 
+	 * @param node
+	 *            The node that is currently visited.
+	 * @return Whether to visit the children.
+	 */	//@Override
 	public boolean visit(AstNode node) {
 		//Amin: This is to analyse AST for detecting code smells before JS code instrumentation
 		smellDetector.SetASTNode(node);
 		smellDetector.analyseAstNode();		
-		//smellDetector.analyseObjecsList();
+		
 		
 		//TreeNode<String> n = new TreeNode<String>();
 		//n.setData(node.shortName());

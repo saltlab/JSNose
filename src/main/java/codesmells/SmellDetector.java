@@ -717,6 +717,25 @@ public class SmellDetector {
 	}
 
 
+	
+	
+	
+	
+	/**
+	 * Analysing JS/HTML/CSS coupling
+	 * 
+	 * TODO: distinguish between server-side generated codes and original inline codes
+	 * 
+	 */
+	public static void analyseCoupling(String code) {
+		// counting lines of inline javascript 
+		String[] lines = code.split("\r\n|\r|\n");
+		System.out.println(lines.length);
+		System.out.println("There are " + code + " lines of JavaScript code inside your HTML");
+	}
+	
+	
+	
 }
 
 

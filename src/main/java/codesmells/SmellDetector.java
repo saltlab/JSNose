@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.collections.functors.PrototypeFactory;
 import org.mozilla.javascript.CompilerEnvirons;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Parser;
@@ -60,36 +61,93 @@ public class SmellDetector {
 	}
 
 	/**
-	 * Analysing jsObjects list to calculate used/unused inherited properties 
+	 * Printing list of object when all AST nodes were visited. The method is static to be called in JSModifyProxyPlugin.modifyJS()
 	 */
-	public void analyseObjecsList() {
+	public static void printObject(){
+		
+		analyseObjecsList();
+		
+		//for (JavaScriptObjectInfo o: jsObjects)
+		//	System.out.println(o);
+	}
+	
+	/**
+	 * Analysing jsObjects list to calculate used/unused inherited properties 
+	 * The method is static to be used by printObject()
+	 */
+	public static void analyseObjecsList() {
+		
+		String protptype = "";
 		
 		//	usedInheritedPropetries = intersection of ownPropetries and inheritedPropetries 
-		//	usedInheritedPropetries= inheritedPropetries - ownPropetries
-		ArrayList<String> ownPropetries = new ArrayList<String>();
-		ArrayList<String> inheritedPropetries = new ArrayList<String>();
+		//	usedInheritedPropetries = inheritedPropetries - ownPropetries
+		ArrayList<String> ownPropetries = new ArrayList<String>();	// only own
+		ArrayList<String> usedPropetries = new ArrayList<String>();	// both own and inherited
+		ArrayList<String> inheritedPropetries = new ArrayList<String>();		// ownPropetries of the prototype (if has one)
 		ArrayList<String> usedInheritedPropetries = new ArrayList<String>();	// Inherited properties used or overwritten
 		ArrayList<String> notUsedInheritedPropetries = new ArrayList<String>();	// Inherited properties not used or overwritten
 
 		for (JavaScriptObjectInfo jso : jsObjects){
+//			ownPropetries.clear();
+//			usedPropetries.clear();
+//			inheritedPropetries.clear();
+			usedInheritedPropetries.clear();
+			notUsedInheritedPropetries.clear();
+			
 			ownPropetries = jso.getOwnPropetries();
-			inheritedPropetries = jso.getInheritedPropetries();
-			usedInheritedPropetries = jso.getUsedInheritedPropetries();
-			notUsedInheritedPropetries = jso.getNotUsedInheritedPropetries();
+			System.out.println("ownPropetries of :" + jso.getName() + " is: " + ownPropetries);
+			
+			usedPropetries = jso.getUsedPropetries();
+			System.out.println("usedPropetries of :" + jso.getName() + " is: " + usedPropetries);
+			
+			//detecting not-own but used properties
+			for (String used: usedPropetries)
+				if (!ownPropetries.contains(used))
+					System.out.println("property: " + used + " was delegated to prototype chain");
+					
+			
+			
+			protptype = jso.getPrototype();
+			if (protptype!="")
+				System.out.println("protptype of :" + jso.getName() + " is: " + protptype);
+			
+			for (JavaScriptObjectInfo temp : jsObjects)
+				if (temp.getName().equals(protptype)){
+					inheritedPropetries = temp.getOwnPropetries();
+				
+					jso.setInheritedPropetries(inheritedPropetries);
+					System.out.println("inheritedPropetries of :" + jso.getName() + " is: " + jso.getInheritedPropetries());
+					
+					
+					for (String prop : inheritedPropetries){
+						if (ownPropetries.contains(prop))	// finding used/overrode inherited properties
+							usedInheritedPropetries.add(prop);
+						else
+							notUsedInheritedPropetries.add(prop);
+					}
 
-			System.out.println("inheritedPropetries:" + inheritedPropetries);
-						
-			for (String prop : inheritedPropetries){
-				if (ownPropetries.contains(prop))	// finding used/overrode inherited properties
-					usedInheritedPropetries.add(prop);
-				else
-					notUsedInheritedPropetries.add(prop);
-			}
+					jso.setUsedInheritedPropetries(usedInheritedPropetries);
+					jso.setNotUsedInheritedPropetries(notUsedInheritedPropetries);
+					
+					System.out.println("usedInheritedPropetries of :" + jso.getName() + " is: " + jso.getUsedInheritedPropetries());
+
+					System.out.println("notUsedInheritedPropetries of :" + jso.getName() + " is: " + jso.getNotUsedInheritedPropetries());
+					
+					
+					break;
+				}
+			
+
+			
 			
 			// detecting refused bequest
-			if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < 0.8)
+			if (protptype!="")
+				if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < 0.33)
 				System.out.println("Detected refused bequest for object: " + jso.getName());
 		
+			
+			System.out.println();
+			
 		}
 	}
 	
@@ -232,6 +290,7 @@ public class SmellDetector {
 					if (LHS==true){
 						System.out.println("THIS IS AN OWN PROPERTY!");
 						jsObjects.get(currentObjectIndex).addOwnProperty(((Name)ASTNode).getIdentifier());
+						jsObjects.get(currentObjectIndex).addUsedProperty(((Name)ASTNode).getIdentifier());
 					}else{
 						System.out.println("THIS IS A USED PROPERTY!");
 						jsObjects.get(currentObjectIndex).addUsedProperty(((Name)ASTNode).getIdentifier());
@@ -249,7 +308,7 @@ public class SmellDetector {
 						System.out.println("lastMessageChain is : " + lastMessageChain + " so " + ((Name)ASTNode).getIdentifier() + " should be a new object");
 
 						candidateObjectName = ((Name)ASTNode).getIdentifier();
-						JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth());
+						JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
 						if (!objectExists(newJSObj)){		// add the new object if does not already exist
 							jsObjects.add(newJSObj);
 							currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
@@ -287,7 +346,7 @@ public class SmellDetector {
 		if (nextNameIsObject == true){	// check if next name is an object name, default is false
 			// either an already found object or a new object. Example is oldObj.newProperty or newObj.newProperty
 			candidateObjectName = ((Name)ASTNode).getIdentifier();
-			JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth());
+			JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
 			if (!objectExists(newJSObj)){		// add the new object if does not already exist
 				jsObjects.add(newJSObj);
 				currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
@@ -316,7 +375,7 @@ public class SmellDetector {
 	 * Extracting object literals in javaScript
 	 */
 	public void analyseObjectLiteralNode() {
-		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth());
+		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
 		newJSObj.setType("ObjectLiteral");
 		jsObjects.add(newJSObj);
 		currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
@@ -351,7 +410,7 @@ public class SmellDetector {
 		   if getFunctionName==null then candidateObjectName is the name of object (filled in the last ASTNode visit) 
 		   to get created by using new on the noname function
 		 */
-		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth());
+		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
 		if (!objectExists(newJSObj)){
 			newJSObj.setType("FunctionCandidate"); // an object may later be instantiated form this function
 			// adding parameters as properties of the object
@@ -388,7 +447,7 @@ public class SmellDetector {
 
 	public void analyseNewExpressionNode() {
 		// candidateObjectName was filled in the previous ASTNode visit
-		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth());
+		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
 		if (!objectExists(newJSObj) && !candidateObjectName.equals("prototype")){
 			jsObjects.add(newJSObj);
 			currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
@@ -412,7 +471,7 @@ public class SmellDetector {
 		if (currentPrototype!=""){
 			System.out.println("Prototype is :" + currentPrototype);
 
-			JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(currentIdentifier, ASTNode.depth());
+			JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(currentIdentifier, ASTNode.depth(), ASTNode.getLineno()+1);
 			if (!objectExists(newJSObj)){		// add the new object if does not already exist
 				jsObjects.add(newJSObj);
 				currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
@@ -572,12 +631,7 @@ public class SmellDetector {
 	}
 
 
-	
-	public static void printObject(){
-		for (JavaScriptObjectInfo o: jsObjects)
-			System.out.println(o);
-	}
-	
+
 	public boolean objectExists(JavaScriptObjectInfo jsObject){
 		for (JavaScriptObjectInfo o: jsObjects)
 			if (o.getName().equals(jsObject.getName())){

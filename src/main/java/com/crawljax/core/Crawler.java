@@ -350,7 +350,7 @@ public class Crawler implements Runnable {
 			//System.out.println(isObject + " "+candidateJSObject);
 			if (isObject!=null && isObject.toString().equals("true")){
 				System.out.println(candidateJSObject + " is an object!");
-				JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0);
+				JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0,0);
 				
 				//Adding properties and prototype to the newJSObj
 

@@ -7,20 +7,22 @@ public class JavaScriptObjectInfo {
 	private String type = "";
 	private String prototype = "";
 	private int ASTdepth = 0;
+	private int lineNumber = 0;
 	
 	//	usedInheritedPropetries = intersection of ownPropetries and inheritedPropetries 
 	//	usedInheritedPropetries= inheritedPropetries - ownPropetries
-	private ArrayList<String> ownPropetries = new ArrayList<String>();
-	private ArrayList<String> inheritedPropetries = new ArrayList<String>();
+	private ArrayList<String> ownPropetries = new ArrayList<String>();				// properties that are defined for the object
+	private ArrayList<String> inheritedPropetries = new ArrayList<String>();		// properties that are used but not defined for the object
 	private ArrayList<String> usedInheritedPropetries = new ArrayList<String>();	// Inherited properties used or override
 	private ArrayList<String> notUsedInheritedPropetries = new ArrayList<String>();	// Inherited properties not used or override
 
 	private ArrayList<String> usedPropetries = new ArrayList<String>();	// Properties which are used (in the right hand side) which might be own or inherited
 
 	
-	public JavaScriptObjectInfo(String name, int ASTNodeDepth){
+	public JavaScriptObjectInfo(String name, int ASTNodeDepth, int lineNumber){
 		this.name = name;
 		this.ASTdepth = ASTNodeDepth;
+		this.lineNumber = lineNumber;
 	}
 
 	public void setType(String type){
@@ -43,10 +45,14 @@ public class JavaScriptObjectInfo {
 	}
 	
 	public void setPrototype(String p){
-		prototype = p;
+		this.prototype = p;
 	}
 	
+	public String getPrototype(){
+		return this.prototype;
+	}
 
+	
 	public String getName(){
 		return name;
 	}
@@ -57,7 +63,13 @@ public class JavaScriptObjectInfo {
 	}
 	
 	public String toString(){
-		String objInfoString = "Object name:" + name + "\nOwn properties:" + ownPropetries +"\nPrototype object: " + prototype +"\n" ;
+		String objInfoString = "Object name:" + name + "\n" +
+				"Own properties:" + ownPropetries +"\n" +
+				"Inherited properties:" + inheritedPropetries +"\n" +
+				"Used properties:" + usedPropetries +"\n" +
+				"Used inherited properties:" + usedInheritedPropetries +"\n" +
+				"Not used inherited properties:" + notUsedInheritedPropetries +"\n" +
+				"Prototype object: " + prototype +"\n" ;
 		return objInfoString;
 	}
 
@@ -102,5 +114,13 @@ public class JavaScriptObjectInfo {
 
 	public void setUsedPropetries(ArrayList<String> usedPropetries) {
 		this.usedPropetries = usedPropetries;
+	}
+
+	public int getLineNumber() {
+		return lineNumber;
+	}
+
+	public void setLineNumber(int lineNumber) {
+		this.lineNumber = lineNumber;
 	}
 }

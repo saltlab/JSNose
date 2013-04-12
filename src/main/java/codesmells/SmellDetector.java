@@ -52,6 +52,9 @@ public class SmellDetector {
 	private boolean assignmentLHSVisited = false; 
 
 	
+	private boolean CatchClause = false;	// To detect empty Catch Clauses
+	
+	
 	public SmellDetector() {
 		ASTNode = null;
 	}
@@ -217,12 +220,7 @@ public class SmellDetector {
 		
 		checkLongMessageChain(ASTNodeName);   // also used to detect message chain used in object recognition
 
-		/*
-		if (ASTNode instanceof FunctionNode) {
-			isLongMethod();
-			hasManyParameters();
-		}
-		*/
+
 		
 		// check if we are in the up the currentObjectNodeDepth
 		if (ASTNode.depth() < currentObjectNodeDepth && lastMessageChain==1 && ignoreDepthChange==false){  // dealing with a.b.c = ... patterns  
@@ -257,9 +255,16 @@ public class SmellDetector {
 			analyseFunctionCallNode();
 		else if (ASTNodeName.equals("Assignment"))
 			analyseAssignmentNode();
+		else if (ASTNodeName.equals("CatchClause"))
+			analyseCatchClause();
+		else if (ASTNodeName.equals("Block"))
+			analyseBlock();		
+		else if (ASTNodeName.equals("SwitchCase"))
+			isSwitchSmell();
 
-	
 
+
+		
 		//System.out.println("node.toSource() : " + node.toSource());
 		
 		System.out.println();
@@ -278,15 +283,32 @@ public class SmellDetector {
 				ASTNode instanceof ContinueStatement || ASTNode instanceof ThrowStatement || ASTNode instanceof VariableDeclaration))) {// || node instanceof ExpressionStatement || node instanceof BreakStatement || node instanceof ContinueStatement || node instanceof ThrowStatement || node instanceof VariableDeclaration || node instanceof ReturnStatement || node instanceof SwitchCase)) {
 			return;
 		}
-
-
-		if (ASTNode instanceof SwitchCase) {
-			isSwitchSmell();
-		}
 		****/
 	}
 
 
+	
+	/**
+	 * Empty catch clause detection
+	 */
+	private void analyseCatchClause() {
+		CatchClause = true;		
+	}
+
+	private void analyseBlock() {
+		if (CatchClause==true){
+			if (ASTNode.hasChildren()==false)
+				System.out.println("Empty catch clause at line: " + (ASTNode.getLineno()+1));
+			CatchClause = false;
+		}
+	}
+
+
+	/**
+	 * Deciding if an expression is a LHS
+	 * Used to distinguish ownProperties and usedProperties
+	 */
+	
 	private void analyseAssignmentNode() {
 		assignmentNodeDepth = ASTNode.depth();
 		assignmentLHSVisited = false;
@@ -437,6 +459,12 @@ public class SmellDetector {
 	 */
 	public void analyseFunctionNode() {
 
+		// detecting long methods
+		isLongMethod();
+		
+		// detecting long parameter list
+		hasManyParameters();
+		
 		FunctionNode f = (FunctionNode) ASTNode;
 		//System.out.println(f.debugPrint());
 		
@@ -698,28 +726,29 @@ public class SmellDetector {
 	 * TODO
 	 */
 	private void isSwitchSmell() {
-		//Add block around all statements in the switch case
-		SwitchCase sc = (SwitchCase)ASTNode;
-		List<AstNode> statements = sc.getStatements();
-		List<AstNode> blockStatement = new ArrayList<AstNode>();
-		Block b = new Block();
 
-		if (statements != null) {
-			Iterator<AstNode> it = statements.iterator();
-			while (it.hasNext()) {
-				AstNode stmnt = it.next();
-				b.addChild(stmnt);
-			}
-
-			blockStatement.add(b);
-			sc.setStatements(blockStatement);
-		}
+		System.out.println("switch found at line: " + (ASTNode.getLineno()+1));
+		
+		//		Add block around all statements in the switch case
+//		SwitchCase sc = (SwitchCase)ASTNode;
+//		List<AstNode> statements = sc.getStatements();
+//		List<AstNode> blockStatement = new ArrayList<AstNode>();
+//		Block b = new Block();
+//
+//		if (statements != null) {
+//			Iterator<AstNode> it = statements.iterator();
+//			while (it.hasNext()) {
+//				AstNode stmnt = it.next();
+//				b.addChild(stmnt);
+//			}
+//
+//			blockStatement.add(b);
+//			sc.setStatements(blockStatement);
+//		}
 	}
 
 
-	
-	
-	
+
 	
 	/**
 	 * Analysing JS/HTML/CSS coupling

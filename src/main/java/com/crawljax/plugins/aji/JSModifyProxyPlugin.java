@@ -215,13 +215,9 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			return input;
 		}
 		try {
+
 			if (scopename.contains("script")){
-				
 				SmellDetector.analyseCoupling(input);
-				
-				String[] lines = input.split("\r\n|\r|\n");
-				System.out.println(lines.length);
-				System.out.println(input);
 			}
 
 			AstRoot ast = null;

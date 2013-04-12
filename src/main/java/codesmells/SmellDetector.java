@@ -87,12 +87,18 @@ public class SmellDetector {
 		ArrayList<String> usedInheritedPropetries = new ArrayList<String>();	// Inherited properties used or overwritten
 		ArrayList<String> notUsedInheritedPropetries = new ArrayList<String>();	// Inherited properties not used or overwritten
 
+		ArrayList<String> delegatedPropetries = new ArrayList<String>();		// Delegated properties which are defined some where in the prototype chain 
+		ArrayList<JavaScriptObjectInfo> prototypeChain = new ArrayList<JavaScriptObjectInfo>();				// Storing the prototype chain of an object 
+
+		
 		for (JavaScriptObjectInfo jso : jsObjects){
 //			ownPropetries.clear();
 //			usedPropetries.clear();
 //			inheritedPropetries.clear();
 			usedInheritedPropetries.clear();
 			notUsedInheritedPropetries.clear();
+			delegatedPropetries.clear();
+			prototypeChain.clear();
 			
 			ownPropetries = jso.getOwnPropetries();
 			System.out.println("ownPropetries of :" + jso.getName() + " is: " + ownPropetries);
@@ -102,55 +108,88 @@ public class SmellDetector {
 			
 			//detecting not-own but used properties
 			for (String used: usedPropetries)
-				if (!ownPropetries.contains(used))
+				if (!ownPropetries.contains(used)){
 					System.out.println("property: " + used + " was delegated to prototype chain");
-					
-			
-			
+					delegatedPropetries.add(used);
+				}
+
 			protptype = jso.getPrototype();
-			if (protptype!="")
+			if (protptype!=""){
+
 				System.out.println("protptype of :" + jso.getName() + " is: " + protptype);
-			
-			for (JavaScriptObjectInfo temp : jsObjects)
-				if (temp.getName().equals(protptype)){
-					inheritedPropetries = temp.getOwnPropetries();
-				
-					jso.setInheritedPropetries(inheritedPropetries);
-					System.out.println("inheritedPropetries of :" + jso.getName() + " is: " + jso.getInheritedPropetries());
-					
-					
-					for (String prop : inheritedPropetries){
-						if (ownPropetries.contains(prop))	// finding used/overrode inherited properties
-							usedInheritedPropetries.add(prop);
-						else
-							notUsedInheritedPropetries.add(prop);
+
+				for (JavaScriptObjectInfo proto : jsObjects)
+					if (proto.getName().equals(protptype)){
+						
+						prototypeChain.add(proto);
+						
+						inheritedPropetries = proto.getOwnPropetries();
+
+						jso.setInheritedPropetries(inheritedPropetries);
+						System.out.println("inheritedPropetries of :" + jso.getName() + " is: " + jso.getInheritedPropetries());
+
+
+						for (String prop : inheritedPropetries){
+							if (ownPropetries.contains(prop))	// finding used/overrode inherited properties
+								usedInheritedPropetries.add(prop);
+							else
+								notUsedInheritedPropetries.add(prop);
+						}
+
+						jso.setUsedInheritedPropetries(usedInheritedPropetries);
+						jso.setNotUsedInheritedPropetries(notUsedInheritedPropetries);
+
+						System.out.println("usedInheritedPropetries of :" + jso.getName() + " is: " + jso.getUsedInheritedPropetries());
+
+						System.out.println("notUsedInheritedPropetries of :" + jso.getName() + " is: " + jso.getNotUsedInheritedPropetries());
+
+
+
+						// detecting refused bequest
+						if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < 0.33)
+							System.out.println("Detected refused bequest for object: " + jso.getName());
+
+
+
+						// detecting prototype-chain
+						protptype = proto.getPrototype();
+						while(protptype != ""){ 
+							for (JavaScriptObjectInfo o : jsObjects)
+								if (o.getName().equals(protptype)){
+									protptype = o.getPrototype();
+									prototypeChain.add(o);
+									break;
+								}
+						}
+
+						//System.out.println("prototypeChain is: " + prototypeChain);
+
+						// detecting delegation in prototype-chain
+						for (String delProp : delegatedPropetries){
+							boolean found = false;
+							for (JavaScriptObjectInfo o : prototypeChain){
+								inheritedPropetries = o.getOwnPropetries();
+								if (inheritedPropetries.contains(delProp)){	// finding used/overrode inherited properties
+									System.out.println("delegated property: " + delProp + " was found in object: " + o.getName());
+									found = true;
+									break;
+								}
+							}
+							if (found == false)
+								System.out.println("could not found delegated property: " + delProp + " in prototypeChain");
+						}
+
+						break;
+
 					}
 
-					jso.setUsedInheritedPropetries(usedInheritedPropetries);
-					jso.setNotUsedInheritedPropetries(notUsedInheritedPropetries);
-					
-					System.out.println("usedInheritedPropetries of :" + jso.getName() + " is: " + jso.getUsedInheritedPropetries());
+			}
 
-					System.out.println("notUsedInheritedPropetries of :" + jso.getName() + " is: " + jso.getNotUsedInheritedPropetries());
-					
-					
-					break;
-				}
-			
-
-			
-			
-			// detecting refused bequest
-			if (protptype!="")
-				if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < 0.33)
-				System.out.println("Detected refused bequest for object: " + jso.getName());
-		
-			
 			System.out.println();
 			
 		}
 	}
-	
+
 	/**
 	 * Analysing abstract syntax tree for code smells.
 	 * This is to the following smells:

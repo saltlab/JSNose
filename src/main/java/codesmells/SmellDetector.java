@@ -15,9 +15,10 @@ public class SmellDetector {
 
 	// JSNose parameters for smell detection
 	private static final int MAX_METHID_LENGTH = 20;
-	private static final int MAX_NUMBERS_OF_PARAMETERS = 4;
+	private static final int MAX_NUMBER_OF_PARAMETERS = 4;
 	private static final int MAX_LENGTH_OF_PROTOTYPE = 5;
 	private static final int MAX_LENGTH_OF_MESSAGE_CHAIN = 3;
+	private static final int MAX_NUMBER_OF_SWITCHCASE = 3;
 
 	private AstNode ASTNode;
 
@@ -37,20 +38,27 @@ public class SmellDetector {
 	private int consecutivePropertyGet = 0;	// This is to store number of consecutive getting of property used to detect long message chain 
 	private int lastMessageChain = 0;		// This is to store last message chain using consecutivePropertyGet 
 	private boolean ignoreDepthChange = false;		// This is also used to decide for a.b.c pattern that c is a property of b not a separate identifier 
+	private static ArrayList<Integer> longMessageFound = new ArrayList<Integer>();	// keeping line number where a long message occurred
 	
 	private boolean LHS = false;			// This is to decide if the ASTNode is at the left hand-side of an assignment 
 	private int assignmentNodeDepth = 0;	// This is to store ASTNode depth of assignment to be used for detecting LHS value 
 	private boolean assignmentLHSVisited = false; 
 
-	private static ArrayList<Integer> longMessageFound = new ArrayList<Integer>();	// keeping line number where a long message occurred
 	
 	private boolean CatchClause = false;	// To detect empty Catch Clauses
 	private static ArrayList<Integer> emptyCatchFound = new ArrayList<Integer>();	// keeping line number where an empty catch occurred
 
-	private static ArrayList<String> globals = new ArrayList<String>();	// keeping global variables
-	private static ArrayList<String> locals = new ArrayList<String>();	// keeping local variables
-	private static ArrayList<Integer> localsLineNumber = new ArrayList<Integer>();	// keeping line number of local variables
-	private boolean nextIsLocal = false;
+	private static ArrayList<Integer> longMethodFound = new ArrayList<Integer>();	// keeping line number where a long method is defined
+
+	private static ArrayList<Integer> longParameterListFound = new ArrayList<Integer>();	// keeping line number where a long parameter list is found
+
+	private static ArrayList<Integer> switchFound = new ArrayList<Integer>();	// keeping line number where a switch statement is found
+	
+
+//	private static ArrayList<String> globals = new ArrayList<String>();	// keeping global variables
+//	private static ArrayList<String> locals = new ArrayList<String>();	// keeping local variables
+//	private static ArrayList<Integer> localsLineNumber = new ArrayList<Integer>();	// keeping line number of local variables
+//	private boolean nextIsLocal = false;
 	
 	public SmellDetector() {
 		ASTNode = null;
@@ -74,15 +82,49 @@ public class SmellDetector {
 		for (int i=0;i<emptyCatchFound.size();i++)
 			System.out.println("Empty catch clause found at line: " + emptyCatchFound.get(i));
 
-
+		// Globals are done in Crawler.java
+		
+		/*
+		System.out.println("********** LARGE OBJECT **********");
+		System.out.println("Total number of long messages: " + longMessageFound.size());
+		for (int i=0;i<longMessageFound.size();i++)
+			System.out.println("Long message chain found at line: " + longMessageFound.get(i));	
+		
+		
+		System.out.println("********** LAZY OBJECT **********");
+		System.out.println("Total number of long messages: " + longMessageFound.size());
+		for (int i=0;i<longMessageFound.size();i++)
+			System.out.println("Long message chain found at line: " + longMessageFound.get(i));
+		
+		*/
+		
+		
 		System.out.println("********** LONG MESSAGE **********");
 		System.out.println("Total number of long messages: " + longMessageFound.size());
 		for (int i=0;i<longMessageFound.size();i++)
 			System.out.println("Long message chain found at line: " + longMessageFound.get(i));
 
-		
-		//longMessageFound.add((ASTNode.getLineno()+1));
 
+		System.out.println("********** LONG METHOD/FUNCTION **********");
+		System.out.println("Total number of long methods: " + longMethodFound.size());
+		for (int i=0;i<longMethodFound.size();i++)
+			System.out.println("Long method found at line: " + longMethodFound.get(i));
+
+		
+		System.out.println("********** LONG PARAMETER LIST **********");
+		System.out.println("Number of functions with long parameter list: " + longParameterListFound.size());
+		for (int i=0;i<longParameterListFound.size();i++)
+			System.out.println("Long parameter list found at line: " + longParameterListFound.get(i));
+
+		// Refused bequest
+		
+		System.out.println("********** SWITCH STATEMENT **********");
+		System.out.println("Number of smelly switch statements: " + switchFound.size());
+		for (int i=0;i<switchFound.size();i++)
+			System.out.println("Smelly switch statement found at line: " + switchFound.get(i));
+		
+		
+		
 		
 		System.out.println("********** OBJECT LIST **********");
 		for (JavaScriptObjectInfo o: jsObjects)
@@ -302,7 +344,7 @@ public class SmellDetector {
 
 	// detecting local variable
 	private void analyseVariable() {
-		nextIsLocal = true;		
+		//nextIsLocal = true;		
 	}
 
 	/**
@@ -604,11 +646,10 @@ public class SmellDetector {
 	 */
 	private boolean hasManyParameters(){
 		FunctionNode func = (FunctionNode) ASTNode;
-		if (func.getParams().size() >= MAX_NUMBERS_OF_PARAMETERS){
-			System.out.println("function " + func.getName() + " has " + 
-					func.getParams().size() + " parameters in line " + (func.getLineno()+1));
-
-			//System.out.println("also it has " + func.getParamCount());
+		if (func.getParams().size() >= MAX_NUMBER_OF_PARAMETERS){
+			//System.out.println("function " + func.getName() + " has " + 
+			//		func.getParams().size() + " parameters in line " + (func.getLineno()+1));
+			longParameterListFound.add((ASTNode.getLineno()+1));
 			return true;
 		}
 		return false;
@@ -620,7 +661,8 @@ public class SmellDetector {
 	private boolean isLongMethod(){
 		FunctionNode func = (FunctionNode) ASTNode;
 		if (func.getEndLineno() - func.getLineno() > MAX_METHID_LENGTH){
-			System.out.println("This functtion is large. Starts from line " + (func.getLineno()+1) + " to line " + (func.getEndLineno()+1));
+			longMethodFound.add((ASTNode.getLineno()+1));
+			//System.out.println("This function is long. Starts from line " + (func.getLineno()+1) + " to line " + (func.getEndLineno()+1));
 			return true;
 		}
 		return false;
@@ -751,24 +793,11 @@ public class SmellDetector {
 	 */
 	private void isSwitchSmell() {
 
-		System.out.println("switch found at line: " + (ASTNode.getLineno()+1));
+		//System.out.println("switch found at line: " + (ASTNode.getLineno()+1));
 		
-		//		Add block around all statements in the switch case
-//		SwitchCase sc = (SwitchCase)ASTNode;
-//		List<AstNode> statements = sc.getStatements();
-//		List<AstNode> blockStatement = new ArrayList<AstNode>();
-//		Block b = new Block();
-//
-//		if (statements != null) {
-//			Iterator<AstNode> it = statements.iterator();
-//			while (it.hasNext()) {
-//				AstNode stmnt = it.next();
-//				b.addChild(stmnt);
-//			}
-//
-//			blockStatement.add(b);
-//			sc.setStatements(blockStatement);
-//		}
+		SwitchCase sc = (SwitchCase)ASTNode;
+		if (sc.getStatements().size() > MAX_NUMBER_OF_SWITCHCASE)
+			switchFound.add((ASTNode.getLineno()+1));
 	}
 
 

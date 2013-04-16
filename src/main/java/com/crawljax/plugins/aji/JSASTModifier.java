@@ -100,9 +100,6 @@ public abstract class JSASTModifier implements NodeVisitor {
 	/**
 	 * Abstract constructor to initialize the mapper variable.
 	 */
-	/**
-	 * Abstract constructor to initialize the mapper variable.
-	 */
 	protected JSASTModifier() {
 		/* add -<number of arguments> to also make sure number of arguments is the same */
 		mapper.put("addClass", "attr('class')");
@@ -273,7 +270,7 @@ public abstract class JSASTModifier implements NodeVisitor {
 	
 	
 	/**
-	 * AST node visiting method to detect code smells
+	 * JSNose version: AST node visiting method to detect code smells
 	 * 
 	 * @param node
 	 *            The node that is currently visited.

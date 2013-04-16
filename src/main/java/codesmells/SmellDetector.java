@@ -1,18 +1,9 @@
 package codesmells;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.collections.functors.PrototypeFactory;
-import org.mozilla.javascript.CompilerEnvirons;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Parser;
-import org.mozilla.javascript.RhinoException;
-import org.mozilla.javascript.Token;
+
 import org.mozilla.javascript.ast.*;
 
 /**
@@ -51,9 +42,15 @@ public class SmellDetector {
 	private int assignmentNodeDepth = 0;	// This is to store ASTNode depth of assignment to be used for detecting LHS value 
 	private boolean assignmentLHSVisited = false; 
 
+	private static ArrayList<Integer> longMessageFound = new ArrayList<Integer>();	// keeping line number where a long message occurred
 	
 	private boolean CatchClause = false;	// To detect empty Catch Clauses
-	
+	private static ArrayList<Integer> emptyCatchFound = new ArrayList<Integer>();	// keeping line number where an empty catch occurred
+
+	private static ArrayList<String> globals = new ArrayList<String>();	// keeping global variables
+	private static ArrayList<String> locals = new ArrayList<String>();	// keeping local variables
+	private static ArrayList<Integer> localsLineNumber = new ArrayList<Integer>();	// keeping line number of local variables
+	private boolean nextIsLocal = false;
 	
 	public SmellDetector() {
 		ASTNode = null;
@@ -64,14 +61,32 @@ public class SmellDetector {
 	}
 
 	/**
-	 * Printing list of object when all AST nodes were visited. The method is static to be called in JSModifyProxyPlugin.modifyJS()
+	 * Showing list of smells when all AST nodes were visited. The method is static to be called in JSModifyProxyPlugin.modifyJS()
 	 */
-	public static void printObject(){
+	public static void showResults(){
+		// TODO: write in text file
+		System.out.println("********** CODE SMELL REPORT **********");
 		
 		analyseObjecsList();
 		
-		//for (JavaScriptObjectInfo o: jsObjects)
-		//	System.out.println(o);
+		System.out.println("********** EMPTY CATCH **********");
+		System.out.println("Total number of empty catch clause: " + emptyCatchFound.size());
+		for (int i=0;i<emptyCatchFound.size();i++)
+			System.out.println("Empty catch clause found at line: " + emptyCatchFound.get(i));
+
+
+		System.out.println("********** LONG MESSAGE **********");
+		System.out.println("Total number of long messages: " + longMessageFound.size());
+		for (int i=0;i<longMessageFound.size();i++)
+			System.out.println("Long message chain found at line: " + longMessageFound.get(i));
+
+		
+		//longMessageFound.add((ASTNode.getLineno()+1));
+
+		
+		System.out.println("********** OBJECT LIST **********");
+		for (JavaScriptObjectInfo o: jsObjects)
+			System.out.println(o);
 	}
 	
 	/**
@@ -95,9 +110,6 @@ public class SmellDetector {
 
 		
 		for (JavaScriptObjectInfo jso : jsObjects){
-//			ownPropetries.clear();
-//			usedPropetries.clear();
-//			inheritedPropetries.clear();
 			usedInheritedPropetries.clear();
 			notUsedInheritedPropetries.clear();
 			delegatedPropetries.clear();
@@ -166,6 +178,8 @@ public class SmellDetector {
 						}
 
 						//System.out.println("prototypeChain is: " + prototypeChain);
+						if (prototypeChain.size() >= MAX_LENGTH_OF_PROTOTYPE)
+							System.out.println("Long prototype chain found for object: " + jso.getName() + " defined at line: " + jso.getLineNumber());
 
 						// detecting delegation in prototype-chain
 						for (String delProp : delegatedPropetries){
@@ -194,12 +208,12 @@ public class SmellDetector {
 	}
 
 	/**
-	 * Analysing abstract syntax tree for code smells.
+	 * Analysing ASTNode for code smells.
 	 * This is to the following smells:
 	 * 1. Long list of parameters
 	 * 2. Long methods
 	 * 3. Long message chain
-	 * 4. Middle man
+	 * 4. Lazy object
 	 * 5. Long prototype chain
 	 * 
 	 * @param node
@@ -208,20 +222,14 @@ public class SmellDetector {
 	public void analyseAstNode() {
 
 	
-		//int nt = ASTNode.getType();
-		//String name = Token.typeToName(nt);
 		String ASTNodeName = ASTNode.shortName();
 		
-		//System.out.println("name :" + name);
 		System.out.println("node.shortName() : " + ASTNode.shortName());
 		System.out.println("node.depth() : " + ASTNode.depth());
 		System.out.println("node.getLineno() : " + (ASTNode.getLineno()+1));
 		
-		
-		checkLongMessageChain(ASTNodeName);   // also used to detect message chain used in object recognition
+		checkLongMessageChain();   // also used to detect message chain used in object recognition
 
-
-		
 		// check if we are in the up the currentObjectNodeDepth
 		if (ASTNode.depth() < currentObjectNodeDepth && lastMessageChain==1 && ignoreDepthChange==false){  // dealing with a.b.c = ... patterns  
 			nextNameIsProperty = false;
@@ -241,6 +249,8 @@ public class SmellDetector {
 		
 		if (ASTNodeName.equals("Name"))
 			analyseNameNode();
+		else if (ASTNodeName.equals("VariableDeclaration"))
+			analyseVariable();
 		else if (ASTNodeName.equals("ObjectLiteral"))
 			analyseObjectLiteralNode();
 		else if (ASTNodeName.equals("ObjectProperty"))
@@ -261,6 +271,9 @@ public class SmellDetector {
 			analyseBlock();		
 		else if (ASTNodeName.equals("SwitchCase"))
 			isSwitchSmell();
+		
+		
+		
 
 
 
@@ -287,7 +300,11 @@ public class SmellDetector {
 	}
 
 
-	
+	// detecting local variable
+	private void analyseVariable() {
+		nextIsLocal = true;		
+	}
+
 	/**
 	 * Empty catch clause detection
 	 */
@@ -297,8 +314,10 @@ public class SmellDetector {
 
 	private void analyseBlock() {
 		if (CatchClause==true){
-			if (ASTNode.hasChildren()==false)
-				System.out.println("Empty catch clause at line: " + (ASTNode.getLineno()+1));
+			if (ASTNode.hasChildren()==false){
+				//System.out.println("Empty catch clause at line: " + (ASTNode.getLineno()+1));
+				emptyCatchFound.add((ASTNode.getLineno()+1));
+			}
 			CatchClause = false;
 		}
 	}
@@ -557,15 +576,20 @@ public class SmellDetector {
 	/*
 	 * Detecting long message chain
 	 */
-	private void checkLongMessageChain(String ASTNodeName) {
+	private void checkLongMessageChain() {
+		
+		String ASTNodeName = ASTNode.shortName();
+		
 		if (ASTNodeName.equals("PropertyGet")){
 			//System.out.println("consecutivePropertyGet : " + consecutivePropertyGet);
 			consecutivePropertyGet++;
 			lastMessageChain = consecutivePropertyGet;
 			System.out.println("lastMessageChain: " + lastMessageChain);
 			// check if long meassage chain found
-			if (consecutivePropertyGet >= MAX_LENGTH_OF_MESSAGE_CHAIN)
-				System.out.println("Long message chain found!");
+			if (consecutivePropertyGet >= MAX_LENGTH_OF_MESSAGE_CHAIN){
+				longMessageFound.add((ASTNode.getLineno()+1));
+				//System.out.println("Long message chain found!");
+			}
 			// if previous read was also GETPROP
 			
 		}else{
@@ -759,8 +783,8 @@ public class SmellDetector {
 	public static void analyseCoupling(String code) {
 		// counting lines of inline javascript 
 		String[] lines = code.split("\r\n|\r|\n");
-		System.out.println(lines.length);
-		System.out.println("There are " + code + " lines of JavaScript code inside your HTML");
+		System.out.println("There are " + lines.length + " lines of JavaScript code inside your HTML");
+		System.out.println("code is: " + code);
 	}
 	
 	

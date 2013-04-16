@@ -235,7 +235,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			/* parse some script and save it in AST */
 			ast = rhinoParser.parse(new String(input), scopename, 0);
 			
-			//System.out.println(ast.debugPrint());
+			System.out.println(ast.debugPrint());
 			
 			//System.out.println(makeTreeString(ast.debugPrint()));
 			
@@ -243,7 +243,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			
 			//lt1.prettyPrint();
 			
-			makeTreeString(ast.debugPrint());
+			//makeTreeString(ast.debugPrint());
 			
 			
 			/*Print out AST root to file*/
@@ -281,19 +281,19 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			ast.visit(modifier);
 
 			
-			SmellDetector.printObject();
+			SmellDetector.showResults();
 			
-			
-			
-			//if (htmlFound == true) {
-				modifier.finish(ast);
-				
-				//Amin: add to the list of instrumented JS
-				//if (!modifiedJS.contains(modifier.getJSName()) && modifier.getJSName().endsWith("_js"))
-				if (!modifiedJS.contains(modifier.getJSName()))
-					modifiedJS.add(modifier.getJSName());
 
-				htmlFound = false;
+
+			//if (htmlFound == true) {
+			modifier.finish(ast);
+
+			//Amin: add to the list of instrumented JS
+			//if (!modifiedJS.contains(modifier.getJSName()) && modifier.getJSName().endsWith("_js"))
+			if (!modifiedJS.contains(modifier.getJSName()))
+				modifiedJS.add(modifier.getJSName());
+
+			htmlFound = false;
 			//}
 
 			/* clean up */
@@ -345,18 +345,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 							j++;
 						}
 
-						if (tempRead.equals("GETPROP")){
-							consecutiveGETPROP++;
-							// check if long meassage chain found
-							if (consecutiveGETPROP > 2)
-								System.out.println("Long message chain found!");
-							// if previous read was also GETPROP
-							
-						}else{
-							consecutiveGETPROP = 0;
-						}
-
-						
+					
 						if (tempRead.equals("NAME")){
 							// A NAME IS FOUND!
 							// read two numbers and then read the name

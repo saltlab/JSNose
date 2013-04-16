@@ -341,8 +341,54 @@ public class Crawler implements Runnable {
 		//this.controller.writeEstimationToFile( est ); // est : estimated and actual state-space coverage 
 		CrawljaxController.NumCandidateClickables--;
 
+
+		
 		
 		// extracting true objects in javaScript
+		
+		
+	
+		/**
+		 * Fetching list of globals
+		 */
+		try{
+			Object globals =  this.browser.executeJavaScript("" +
+					"var ownPropertiesArray = []; " +
+					"for (var property in window){" +
+						"if (window.hasOwnProperty(property)){" +
+							"ownPropertiesArray.push(property); " +
+						"}" +
+					"} " +
+					" return ownPropertiesArray;");
+			ArrayList globalVars = (ArrayList) globals;
+			ArrayList<String> globalsVarList = new ArrayList<String>();	// keeping global variables
+			
+			Object acceptable = null;
+
+			for (int i=0;i<globalVars.size();i++){
+				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")){
+					acceptable =  this.browser.executeJavaScript("if (typeof " + globalVars.get(i) + " !== 'function') return true; else return false;");
+					if (acceptable.toString().equals("true")){
+						globalsVarList.add(globalVars.get(i).toString());
+
+					}
+				}
+			}
+			System.out.println("********** GLOBALS **********");
+			System.out.println("Total number of global variables: " + globalsVarList.size());
+			System.out.println("Globals are: " + globalsVarList);
+			
+		}catch (Exception e) {
+			LOGGER.info("Could not execute script");
+		}
+		
+		
+		
+		
+		
+		
+	
+		
 		ArrayList<JavaScriptObjectInfo> jsObjects = new ArrayList<JavaScriptObjectInfo>();
 		for (String candidateJSObject : JSModifyProxyPlugin.getcandidateJSObjectList()){
 			try{
@@ -423,6 +469,11 @@ public class Crawler implements Runnable {
 					//		" return prototypeChainArray;");
 					//System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
 				}
+				
+
+				
+				
+				
 				System.out.println();
 
 			}

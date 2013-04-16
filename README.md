@@ -8,32 +8,32 @@ General smells adapted to JavaScript:
 
 1. Empty catch
 
-2. Large object
+2. Excessive global variables
 
-3. Long message chain
+3. Large object
 
-4. Long method/function
+4. Large object
 
-5. Long parameter list
+5. Long message chain
 
-6. Middle man
+6. Long method/function
 
-7. Refused bequest
+7. Long parameter list
 
-8. Switch statement (not yet)
+8. Refused bequest
 
-9. Unused code (not yet)
+9. Switch statement
+
+10. Unused code
 
 
 
 JavaScript specific code smells:
 
-1. Coupling of JS/HTML/CSS (not yet)
+1. Closure smell
 
-2. Long prototype chain
+2. Coupling of JS/HTML/CSS
 
-2. Nested callback (not yet)
+3. Long prototype chain
 
-
-
-TODO: Results will be reported in the generated CodeSmells.txt file.
+4. Nested callback

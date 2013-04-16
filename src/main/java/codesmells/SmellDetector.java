@@ -19,6 +19,7 @@ public class SmellDetector {
 	private static final int MAX_LENGTH_OF_PROTOTYPE = 5;
 	private static final int MAX_LENGTH_OF_MESSAGE_CHAIN = 3;
 	private static final int MAX_NUMBER_OF_SWITCHCASE = 3;
+	private static final int MAX_LENGTH_OF_SCOPE_CHAIN = 3;
 
 	private AstNode ASTNode;
 
@@ -28,7 +29,6 @@ public class SmellDetector {
 	private boolean nextNameIsProperty = false;		// this is to distinguish properties of an object from other var/names
 	private boolean nextNameIsPrototype = false;	// this is to distinguish prototype of an object from other var/names
 	private boolean nextNameIsObject = false;		// this is to distinguish properties from an object such as for x in x.prototype = y;
-	private boolean innerFunction = false;			// this is to detect if a function is inside another function
 	
 	private int currentObjectNodeDepth = 0;	// This is node.depth() for the current object. A property would be added if its node.depth() is higher than currentObjectNodeDepth
 	private int currentObjectIndex = 0;		// This is the index of current object in jsObjects list (used to add properties/prototype)
@@ -54,7 +54,11 @@ public class SmellDetector {
 
 	private static ArrayList<Integer> switchFound = new ArrayList<Integer>();	// keeping line number where a switch statement is found
 	
+	private int lastFunctionDepth = 0;
+	private int scopeChainLength = 0;
+	private static ArrayList<Integer> longScopeChainFound = new ArrayList<Integer>();	// keeping line number of the inner function of a deep closure
 
+	
 //	private static ArrayList<String> globals = new ArrayList<String>();	// keeping global variables
 //	private static ArrayList<String> locals = new ArrayList<String>();	// keeping local variables
 //	private static ArrayList<Integer> localsLineNumber = new ArrayList<Integer>();	// keeping line number of local variables
@@ -74,6 +78,10 @@ public class SmellDetector {
 	public static void showResults(){
 		// TODO: write in text file
 		System.out.println("********** CODE SMELL REPORT **********");
+		
+		/*
+		 * General Smells
+		 */
 		
 		analyseObjecsList();
 		
@@ -122,6 +130,20 @@ public class SmellDetector {
 		System.out.println("Number of smelly switch statements: " + switchFound.size());
 		for (int i=0;i<switchFound.size();i++)
 			System.out.println("Smelly switch statement found at line: " + switchFound.get(i));
+		
+		
+		/*
+		 * JavaScript Specific Smells
+		 */
+		
+
+		// Long scope chain can be also used to detect callback. More detection process for callback is to dynamically check if the type of a parameter is function
+		System.out.println("********** CLOSURE SMELL **********");
+		System.out.println("Number of long scope chain: " + longScopeChainFound.size());
+		for (int i=0;i<longScopeChainFound.size();i++)
+			System.out.println("Long scope chain found at line: " + longScopeChainFound.get(i));
+
+		
 		
 		
 		
@@ -528,6 +550,18 @@ public class SmellDetector {
 		
 		FunctionNode f = (FunctionNode) ASTNode;
 		//System.out.println(f.debugPrint());
+		
+		// keep track of nested function (scope chain)
+		if (ASTNode.depth() > lastFunctionDepth){
+			scopeChainLength++;
+			System.out.println("scopeChainLength is :" + scopeChainLength + " at line: " + (ASTNode.getLineno()+1));
+			if (scopeChainLength >= MAX_LENGTH_OF_SCOPE_CHAIN)
+				longScopeChainFound.add((ASTNode.getLineno()+1));
+		}else
+			scopeChainLength = 1;
+		lastFunctionDepth = ASTNode.depth();
+		
+			
 		
 		if (f.getFunctionName()!=null){
 			candidateObjectName = f.getFunctionName().getIdentifier();

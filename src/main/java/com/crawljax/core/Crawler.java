@@ -3,6 +3,7 @@ package com.crawljax.core;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
@@ -358,7 +359,7 @@ public class Crawler implements Runnable {
 					"} " +
 					" return ownPropertiesArray;");
 			ArrayList globalVars = (ArrayList) globals;
-			ArrayList<String> globalsVarList = new ArrayList<String>();	// keeping global variables
+			HashSet<String> globalsVarList = new HashSet<String>();	// keeping global variables
 			Object acceptable = null;
 			for (int i=0;i<globalVars.size();i++){
 				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")){

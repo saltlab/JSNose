@@ -285,7 +285,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			ast.visit(modifier);
 
 			
-			SmellDetector.showResults();
+			SmellDetector.generateReport();
 			
 
 

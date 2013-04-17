@@ -1,6 +1,7 @@
 package codesmells;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.mozilla.javascript.ast.*;
@@ -13,13 +14,17 @@ import org.mozilla.javascript.ast.*;
 public class SmellDetector {
 
 	// JSNose parameters for smell detection
-	private static final int MAX_METHID_LENGTH = 20;
-	private static final int MAX_NUMBER_OF_PARAMETERS = 4;
-	private static final int MAX_LENGTH_OF_PROTOTYPE = 5;
-	private static final int MAX_LENGTH_OF_MESSAGE_CHAIN = 3;
-	private static final int MAX_NUMBER_OF_SWITCHCASE = 3;
-	private static final int MAX_LENGTH_OF_SCOPE_CHAIN = 3;
-	private static final double BASE_CLASS_USAGE_RATIO = 0.33;
+	private static final int MAX_METHID_LENGTH = 20;			// function/method length
+	private static final int MAX_NUMBER_OF_PARAMETERS = 4;		// function parameter
+	private static final int MAX_LENGTH_OF_PROTOTYPE = 3;		// prototype chain
+	private static final int MAX_LENGTH_OF_MESSAGE_CHAIN = 3;	// message chain
+	private static final int MAX_NUMBER_OF_SWITCHCASE = 3;		// switch
+	private static final int MAX_LENGTH_OF_SCOPE_CHAIN = 3;		// closure
+	private static final double BASE_CLASS_USAGE_RATIO = 0.33;	// refused bequest
+	private static final int MIN_OBJECT_PROPERTIES = 3;			// lazy object
+	private static final int MAX_OBJECT_PROPERTIES = 20;		// large object
+	private static final int MAX_OBJECT_LOC = 750;				// large object
+	
 
 	private AstNode ASTNode;
 
@@ -41,7 +46,7 @@ public class SmellDetector {
 	private int consecutivePropertyGet = 0;	// This is to store number of consecutive getting of property used to detect long message chain 
 	private int lastMessageChain = 0;		// This is to store last message chain using consecutivePropertyGet 
 	private boolean ignoreDepthChange = false;		// This is also used to decide for a.b.c pattern that c is a property of b not a separate identifier 
-	private static ArrayList<Integer> longMessageFound = new ArrayList<Integer>();	// keeping line number where a long message occurred
+	private static HashSet<Integer> longMessageFound = new HashSet<Integer>();	// keeping line number where a long message occurred
 	
 	private boolean LHS = false;			// This is to decide if the ASTNode is at the left hand-side of an assignment 
 	private int assignmentNodeDepth = 0;	// This is to store ASTNode depth of assignment to be used for detecting LHS value 
@@ -49,29 +54,36 @@ public class SmellDetector {
 
 	
 	private boolean CatchClause = false;	// To detect empty Catch Clauses
-	private static ArrayList<Integer> emptyCatchFound = new ArrayList<Integer>();	// keeping line number where an empty catch occurred
+	private static HashSet<Integer> emptyCatchFound = new HashSet<Integer>();	// keeping line number where an empty catch occurred
 
-	private static ArrayList<Integer> longMethodFound = new ArrayList<Integer>();	// keeping line number where a long method is defined
+	private static HashSet<Integer> longMethodFound = new HashSet<Integer>();	// keeping line number where a long method is defined
 
-	private static ArrayList<Integer> longParameterListFound = new ArrayList<Integer>();	// keeping line number where a long parameter list is found
+	private static HashSet<Integer> longParameterListFound = new HashSet<Integer>();	// keeping line number where a long parameter list is found
 
-	private static ArrayList<Integer> switchFound = new ArrayList<Integer>();	// keeping line number where a switch statement is found
+	private static HashSet<Integer> switchFound = new HashSet<Integer>();	// keeping line number where a switch statement is found
 	
 	private int lastFunctionDepth = 0;
 	private int scopeChainLength = 0;
-	private static ArrayList<Integer> longScopeChainFound = new ArrayList<Integer>();	// keeping line number of the inner function of a deep closure
+	private static HashSet<Integer> longScopeChainFound = new HashSet<Integer>();	// keeping line number of the inner function of a deep closure
 
 	private static int inlineJavaScriptLines = 0;
-	private static ArrayList<String> inlineJavaScriptScopeName = new ArrayList<String>();	// keeping scope name (js file name) where inline JavaScript is detected
+	private static HashSet<String> inlineJavaScriptScopeName = new HashSet<String>();	// keeping scope name (js file name) where inline JavaScript is detected
 	
-	private static ArrayList<String> globals = new ArrayList<String>();	// keeping global variables
+	private static HashSet<String> globals = new HashSet<String>();	// keeping global variables
 	
-	public static void setGlobals(ArrayList<String> globals) {
+	public static void setGlobals(HashSet<String> globals) {
 		SmellDetector.globals = globals;
 	}
 
 	
-	private static ArrayList<String> refusedBequestObjects = new ArrayList<String>();	// keeping objects which refuse bequests
+	private static HashSet<Integer> refusedBequestObjLocation = new HashSet<Integer>();	// keeping objects which refuse bequests
+
+	private static HashSet<Integer> lazyObjectsLocation = new HashSet<Integer>();	// keeping lazy objects
+
+	private static HashSet<Integer> largeObjectsLocation = new HashSet<Integer>();	// keeping large objects
+	
+	private static HashSet<Integer> longPrototypeChainObjLocation = new HashSet<Integer>();	// keeping objects with long prototype chain
+	
 	
 	public SmellDetector() {
 		ASTNode = null;
@@ -81,99 +93,79 @@ public class SmellDetector {
 		ASTNode = node;
 	}
 
+	
 	/**
 	 * Showing list of smells when all AST nodes were visited. The method is static to be called in JSModifyProxyPlugin.modifyJS()
 	 */
-	public static void showResults(){
+	public static void generateReport(){
+
 		// TODO: write in text file
 		System.out.println("********** CODE SMELL REPORT **********");
-		
-		/*
-		 * General Smells
-		 */
-		
+
 		analyseObjecsList();
 		
 		System.out.println("********** EMPTY CATCH **********");
-		System.out.println("Total number of empty catch clause: " + emptyCatchFound.size());
-		for (int i=0;i<emptyCatchFound.size();i++)
-			System.out.println("Empty catch clause found at line: " + emptyCatchFound.get(i));
+		reportSmell(emptyCatchFound);
 
-		// Globals are done in Crawler.java
-		
-		/*
-		System.out.println("********** LARGE OBJECT **********");
-		System.out.println("Total number of long messages: " + longMessageFound.size());
-		for (int i=0;i<longMessageFound.size();i++)
-			System.out.println("Long message chain found at line: " + longMessageFound.get(i));	
-		
-		
-		System.out.println("********** LAZY OBJECT **********");
-		System.out.println("Total number of long messages: " + longMessageFound.size());
-		for (int i=0;i<longMessageFound.size();i++)
-			System.out.println("Long message chain found at line: " + longMessageFound.get(i));
-		
-		*/
-		
-		
-		System.out.println("********** LONG MESSAGE **********");
-		System.out.println("Total number of long messages: " + longMessageFound.size());
-		for (int i=0;i<longMessageFound.size();i++)
-			System.out.println("Long message chain found at line: " + longMessageFound.get(i));
-
-
-		System.out.println("********** LONG METHOD/FUNCTION **********");
-		System.out.println("Total number of long methods: " + longMethodFound.size());
-		for (int i=0;i<longMethodFound.size();i++)
-			System.out.println("Long method found at line: " + longMethodFound.get(i));
-
-		
-		System.out.println("********** LONG PARAMETER LIST **********");
-		System.out.println("Number of functions with long parameter list: " + longParameterListFound.size());
-		for (int i=0;i<longParameterListFound.size();i++)
-			System.out.println("Long parameter list found at line: " + longParameterListFound.get(i));
-
-		// Refused bequest
-		
-		System.out.println("********** SWITCH STATEMENT **********");
-		System.out.println("Number of smelly switch statements: " + switchFound.size());
-		for (int i=0;i<switchFound.size();i++)
-			System.out.println("Smelly switch statement found at line: " + switchFound.get(i));
-		
-		
-		System.out.println("********** COUPLING JS/HTML **********");
-		System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
-		for (int i=0;i<inlineJavaScriptScopeName.size();i++)
-			System.out.println("Scope having the inline JavaScript: " + inlineJavaScriptScopeName.get(i));
-		
-
-		// Long scope chain can be also used to detect callback. More detection process for callback is to dynamically check if the type of a parameter is function
-		System.out.println("********** CLOSURE SMELL **********");
-		System.out.println("Number of long scope chain: " + longScopeChainFound.size());
-		for (int i=0;i<longScopeChainFound.size();i++)
-			System.out.println("Long scope chain found at line: " + longScopeChainFound.get(i));
-
-		
-		
-		//System.out.println("********** OBJECT LIST **********");
-		//for (JavaScriptObjectInfo o: jsObjects)
-		//	System.out.println(o);
-		
-
-		
 		// because globals are extracted at runtime, they are not available in the first execution of this part of code
 		if (globals.size() > 0){
 			System.out.println("********** EXCESSIVE GLOBAL VARIABLES **********");
 			System.out.println("Number of global variables: " + globals.size());
 			System.out.println("List of  global variables: " + globals);
 		}
+		
+		System.out.println("********** LARGE OBJECT **********");
+		reportSmell(largeObjectsLocation);		
 
+		System.out.println("********** LAZY OBJECT **********");
+		reportSmell(lazyObjectsLocation);
+		
+		System.out.println("********** LONG MESSAGE **********");
+		reportSmell(longMessageFound);
+
+		System.out.println("********** LONG METHOD/FUNCTION **********");
+		reportSmell(longMethodFound);
+
+		System.out.println("********** LONG PARAMETER LIST **********");
+		reportSmell(longParameterListFound);
+
+		System.out.println("********** REFUSED BEQUEST **********");
+		reportSmell(refusedBequestObjLocation);
+		
+		System.out.println("********** SWITCH STATEMENT **********");
+		reportSmell(switchFound);
+		
+		System.out.println("********** COUPLING JS/HTML **********");
+		System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
+		for (String sn: inlineJavaScriptScopeName)
+			System.out.println("Scope having the inline JavaScript: " + sn);
+		
+		// Long scope chain can be also used to detect callback. More detection process for callback is to dynamically check if the type of a parameter is function
+		System.out.println("********** CLOSURE SMELL **********");
+		reportSmell(longScopeChainFound);
+
+		System.out.println("********** LONG PROTOTYPE CHAIN **********");
+		reportSmell(longPrototypeChainObjLocation);
+		
+		//System.out.println("********** OBJECT LIST **********");
+		//for (JavaScriptObjectInfo o: jsObjects)
+		//	System.out.println(o);
 		
 		//System.out.println("FUNCTIONS ARE: ");
 		//for (int i=0;i<jsFunctions.size();i++)
 		//	System.out.println(jsFunctions.get(i).getName());
 		
 	}
+	
+	public static void reportSmell(HashSet<Integer> smell){
+		System.out.println("Number of occurance: " + smell.size());
+		for (int i:smell)
+			System.out.println("Line number: " + i);
+	}	
+	
+
+	
+	
 	
 	/**
 	 * Analysing jsObjects list to calculate used/unused inherited properties 
@@ -202,22 +194,49 @@ public class SmellDetector {
 			prototypeChain.clear();
 			
 			ownPropetries = jso.getOwnPropetries();
-			System.out.println("ownPropetries of :" + jso.getName() + " is: " + ownPropetries);
+			//System.out.println("ownPropetries of :" + jso.getName() + " is: " + ownPropetries);
+			
+			
+			/**
+			 * Detecting lazy object
+			 */
+			if (ownPropetries.size() < MIN_OBJECT_PROPERTIES){
+				lazyObjectsLocation.add(jso.getLineNumber());
+			}
+			
+			
+			/**
+			 * Detecting large object
+			 */
+			int LOC = 0; // object methods lines of code
+			// counting total LOC of its methods
+			for (int i=0; i<ownPropetries.size(); i++){
+				for (int j=0; j<jsFunctions.size(); j++){
+					if (ownPropetries.get(i).equals(jsFunctions.get(j).getName()))
+						LOC += jsFunctions.get(j).getLinesOfCode();
+				}
+			}
+			if (LOC >= MAX_OBJECT_LOC || ownPropetries.size() > MAX_OBJECT_PROPERTIES)
+				largeObjectsLocation.add(jso.getLineNumber());
+				
+
+
+			
 			
 			usedPropetries = jso.getUsedPropetries();
-			System.out.println("usedPropetries of :" + jso.getName() + " is: " + usedPropetries);
+			//System.out.println("usedPropetries of :" + jso.getName() + " is: " + usedPropetries);
 			
 			//detecting not-own but used properties
 			for (String used: usedPropetries)
 				if (!ownPropetries.contains(used)){
-					System.out.println("property: " + used + " was delegated to prototype chain");
+					//System.out.println("property: " + used + " was delegated to prototype chain");
 					delegatedPropetries.add(used);
 				}
 
 			protptype = jso.getPrototype();
 			if (protptype!=""){
 
-				System.out.println("protptype of :" + jso.getName() + " is: " + protptype);
+				//System.out.println("protptype of :" + jso.getName() + " is: " + protptype);
 
 				for (JavaScriptObjectInfo proto : jsObjects)
 					if (proto.getName().equals(protptype)){
@@ -227,7 +246,7 @@ public class SmellDetector {
 						inheritedPropetries = proto.getOwnPropetries();
 
 						jso.setInheritedPropetries(inheritedPropetries);
-						System.out.println("inheritedPropetries of :" + jso.getName() + " is: " + jso.getInheritedPropetries());
+						//System.out.println("inheritedPropetries of :" + jso.getName() + " is: " + jso.getInheritedPropetries());
 
 
 						for (String prop : inheritedPropetries){
@@ -240,16 +259,18 @@ public class SmellDetector {
 						jso.setUsedInheritedPropetries(usedInheritedPropetries);
 						jso.setNotUsedInheritedPropetries(notUsedInheritedPropetries);
 
-						System.out.println("usedInheritedPropetries of :" + jso.getName() + " is: " + jso.getUsedInheritedPropetries());
+						//System.out.println("usedInheritedPropetries of :" + jso.getName() + " is: " + jso.getUsedInheritedPropetries());
 
-						System.out.println("notUsedInheritedPropetries of :" + jso.getName() + " is: " + jso.getNotUsedInheritedPropetries());
+						//System.out.println("notUsedInheritedPropetries of :" + jso.getName() + " is: " + jso.getNotUsedInheritedPropetries());
 
 
 
-						// detecting refused bequest
+						/**
+						 * Detecting refused bequest
+						 */
 						if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < BASE_CLASS_USAGE_RATIO){
 							//System.out.println("Detected refused bequest for object: " + jso.getName());
-							refusedBequestObjects.add(jso.getName());
+							refusedBequestObjLocation.add(jso.getLineNumber());
 						}
 
 
@@ -266,8 +287,11 @@ public class SmellDetector {
 						}
 
 						//System.out.println("prototypeChain is: " + prototypeChain);
-						if (prototypeChain.size() >= MAX_LENGTH_OF_PROTOTYPE)
-							System.out.println("Long prototype chain found for object: " + jso.getName() + " defined at line: " + jso.getLineNumber());
+						if (prototypeChain.size() >= MAX_LENGTH_OF_PROTOTYPE){
+							//System.out.println("Long prototype chain found for object: " + jso.getName() + " defined at line: " + jso.getLineNumber());
+							longPrototypeChainObjLocation.add(jso.getLineNumber());
+						}
+						
 
 						// detecting delegation in prototype-chain
 						for (String delProp : delegatedPropetries){
@@ -275,13 +299,13 @@ public class SmellDetector {
 							for (JavaScriptObjectInfo o : prototypeChain){
 								inheritedPropetries = o.getOwnPropetries();
 								if (inheritedPropetries.contains(delProp)){	// finding used/overrode inherited properties
-									System.out.println("delegated property: " + delProp + " was found in object: " + o.getName());
+									//System.out.println("delegated property: " + delProp + " was found in object: " + o.getName());
 									found = true;
 									break;
 								}
 							}
-							if (found == false)
-								System.out.println("could not found delegated property: " + delProp + " in prototypeChain");
+							//if (found == false)
+								//System.out.println("Could not find delegated property: " + delProp + " in prototypeChain");
 						}
 
 						break;
@@ -290,7 +314,7 @@ public class SmellDetector {
 
 			}
 
-			System.out.println();
+			//System.out.println();
 			
 		}
 	}
@@ -305,9 +329,9 @@ public class SmellDetector {
 		String ASTNodeName = ASTNode.shortName();
 		int ASTDepth = ASTNode.depth();
 		
-		System.out.println("node.shortName() : " + ASTNodeName);
-		System.out.println("node.depth() : " + ASTDepth);
-		System.out.println("node.getLineno() : " + (ASTNode.getLineno()+1));
+		//System.out.println("node.shortName() : " + ASTNodeName);
+		//System.out.println("node.depth() : " + ASTDepth);
+		//System.out.println("node.getLineno() : " + (ASTNode.getLineno()+1));
 		
 		checkLongMessageChain();   // also used to detect message chain used in object recognition
 
@@ -316,10 +340,10 @@ public class SmellDetector {
 			nextNameIsProperty = false;
 			//nextNameIsObject = true;
 			//System.out.println("analyseAstNode(): Level changed! nextNameIsObject");
-			System.out.println("analyseAstNode(): Level changed! nextName is not property anymore");
+			//System.out.println("analyseAstNode(): Level changed! nextName is not property anymore");
 		}
 		
-		// check if we are in LHS of the current assignment
+		// check if we are in LHS of the current assignment, used to check if a property is defined and not just used
 		if (ASTDepth==assignmentNodeDepth+1){
 			if (assignmentLHSVisited == false){
 				assignmentLHSVisited = true;
@@ -354,7 +378,7 @@ public class SmellDetector {
 			isSwitchSmell();
 		
 
-		System.out.println();
+		//System.out.println();
 
 		//System.out.println("node.toSource() : " + node.toSource());
 		//System.out.println("node.getType() : " + node.getType());
@@ -404,7 +428,7 @@ public class SmellDetector {
 
 		// setting candidateObjectName and currentIdentifier
 		candidateObjectName = ((Name)ASTNode).getIdentifier();
-		System.out.println("idenfifier: " + candidateObjectName );
+		//System.out.println("idenfifier: " + candidateObjectName );
 		currentIdentifier = candidateObjectName;	// this is to be used in method analyseFunctionCallNode() if a pattern of Object.create(x) was detected where x is the currentPrototype
 		
 
@@ -413,13 +437,13 @@ public class SmellDetector {
 		 */
 		if (nextNameIsProperty == true){		// check if next name is a property name, default is false
 
-			System.out.println("NameIsProperty=true for the name: " + ((Name)ASTNode).getIdentifier());
+			//System.out.println("NameIsProperty=true for the name: " + ((Name)ASTNode).getIdentifier());
 
 			if (((Name)ASTNode).getIdentifier().equals("prototype") || ((Name)ASTNode).getIdentifier().equals("__proto__")){	// check if prototype object is declared (if a pattern of x.prototype found)
 				/**
 				 * check if it is "Object.prototype" and not "x.prototype" = y
 				 */
-				System.out.println("should find a prototype for current object: " + jsObjects.get(currentObjectIndex).getName());
+				//System.out.println("should find a prototype for current object: " + jsObjects.get(currentObjectIndex).getName());
 				
 				nextNameIsProperty = false;
 
@@ -428,27 +452,27 @@ public class SmellDetector {
     			  Adding a property to the current object
 				 */
 				if (!((Name)ASTNode).getIdentifier().equals(jsObjects.get(currentObjectIndex).getName())){ // ignoring to add the function name as a property of the object
-					System.out.println("property found: " + ((Name)ASTNode).getIdentifier() + " for object: " + jsObjects.get(currentObjectIndex).getName());
+					//System.out.println("property found: " + ((Name)ASTNode).getIdentifier() + " for object: " + jsObjects.get(currentObjectIndex).getName());
 					
 					if (LHS==true){
-						System.out.println("THIS IS AN OWN PROPERTY!");
+						//System.out.println("THIS IS AN OWN PROPERTY!");
 						jsObjects.get(currentObjectIndex).addOwnProperty(((Name)ASTNode).getIdentifier());
 						jsObjects.get(currentObjectIndex).addUsedProperty(((Name)ASTNode).getIdentifier());
 					}else{
-						System.out.println("THIS IS A USED PROPERTY!");
+						//System.out.println("THIS IS A USED PROPERTY!");
 						jsObjects.get(currentObjectIndex).addUsedProperty(((Name)ASTNode).getIdentifier());
 					}
 					
 					
-					System.out.println("lastMessageChain is :" + lastMessageChain);
+					//System.out.println("lastMessageChain is :" + lastMessageChain);
 					if (lastMessageChain==1){ // normal case (no nested object.object.object...)
 						nextNameIsProperty = true;
 						ignoreDepthChange = false;
-						System.out.println("ignoreDepthChange = false");
+						//System.out.println("ignoreDepthChange = false");
 					}
 					else{ // dealing with a.b.c = ... pattern
 
-						System.out.println("lastMessageChain is : " + lastMessageChain + " so " + ((Name)ASTNode).getIdentifier() + " should be a new object");
+						//System.out.println("lastMessageChain is : " + lastMessageChain + " so " + ((Name)ASTNode).getIdentifier() + " should be a new object");
 
 						candidateObjectName = ((Name)ASTNode).getIdentifier();
 						JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
@@ -456,19 +480,19 @@ public class SmellDetector {
 							jsObjects.add(newJSObj);
 							currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
 							currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth
-							System.out.println("A new object is used: " + candidateObjectName);
+							//System.out.println("A new object is used: " + candidateObjectName);
 						}
-						System.out.println("object in use: " + candidateObjectName);
+						//System.out.println("object in use: " + candidateObjectName);
 						nextNameIsObject = false;
-						System.out.println("analyseNameNode(): nextNameIsProperty");
+						//System.out.println("analyseNameNode(): nextNameIsProperty");
 						nextNameIsProperty = true;  // to read next name as the property of this object such as x.propX. propX may also be prototype and should be avoided to add as property
 
 						ignoreDepthChange = true;
-						System.out.println("ignoreDepthChange = true");
+						//System.out.println("ignoreDepthChange = true");
 
 						lastMessageChain--;
 						
-						System.out.println("lastMessageChain is :" + lastMessageChain);
+						//System.out.println("lastMessageChain is :" + lastMessageChain);
 						
 					}
 				}
@@ -480,7 +504,7 @@ public class SmellDetector {
 		  check if next name is a prototype object name, default is false
 		 */
 		if (nextNameIsPrototype == true){
-			System.out.println("prototype found: " + ((Name)ASTNode).getIdentifier() + " for object: " + jsObjects.get(currentObjectIndex).getName());
+			//System.out.println("prototype found: " + ((Name)ASTNode).getIdentifier() + " for object: " + jsObjects.get(currentObjectIndex).getName());
 			jsObjects.get(currentObjectIndex).setPrototype(((Name)ASTNode).getIdentifier());
 			nextNameIsPrototype = false;
 		}
@@ -494,17 +518,14 @@ public class SmellDetector {
 				jsObjects.add(newJSObj);
 				currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
 				currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth
-				System.out.println("A new object is used: " + candidateObjectName);
+				//System.out.println("A new object is used: " + candidateObjectName);
 			}else{
-				
-				//JavaScriptObjectInfo existingObject = getJSObject(jsObjects,newJSObj);
-				
 				setCurrentObject(newJSObj);
-				
 			}
-			System.out.println("object in use: " + candidateObjectName);
+
+			//System.out.println("object in use: " + candidateObjectName);
 			nextNameIsObject = false;
-			System.out.println("analyseNameNode(): nextNameIsProperty");
+			//System.out.println("analyseNameNode(): nextNameIsProperty");
 			nextNameIsProperty = true;  // to read next name as the property of this object such as x.propX. propX may also be prototype and should be avoided to add as property
 		}
 
@@ -523,12 +544,12 @@ public class SmellDetector {
 		jsObjects.add(newJSObj);
 		currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
 		currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth
-		System.out.println("Object literal: " + candidateObjectName);
+		//System.out.println("Object literal: " + candidateObjectName);
 	}
 
 	public void analyseObjectPropertyNode() {
 		if (ASTNode.depth() > currentObjectNodeDepth){ // check depth of the prop with current object's depth
-				System.out.println("analyseObjectPropertyNode(): nextNameIsProperty");
+				//System.out.println("analyseObjectPropertyNode(): nextNameIsProperty");
 				nextNameIsProperty = true;
 		}
 		//else
@@ -590,7 +611,7 @@ public class SmellDetector {
 		// keep track of nested function (scope chain)
 		if (fDepth > lastFunctionDepth){
 			scopeChainLength++;
-			System.out.println("scopeChainLength is :" + scopeChainLength + " at line: " + lineNumber);
+			//System.out.println("scopeChainLength is :" + scopeChainLength + " at line: " + lineNumber);
 			if (scopeChainLength >= MAX_LENGTH_OF_SCOPE_CHAIN)
 				longScopeChainFound.add(lineNumber);
 		}else
@@ -601,7 +622,7 @@ public class SmellDetector {
 		
 		if (f.getFunctionName()!=null){
 			candidateObjectName = fName;
-			System.out.println("FUNCTION NAME IS: " + candidateObjectName);
+			//System.out.println("FUNCTION NAME IS: " + candidateObjectName);
 		}
 
 		/*
@@ -620,9 +641,9 @@ public class SmellDetector {
 
 			currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
 			currentObjectNodeDepth = fDepth;	// setting current object node depth
-			System.out.println("Object candidate function name: " + candidateObjectName);
+			//System.out.println("Object candidate function name: " + candidateObjectName);
 		}
-		System.out.println("analyseFunctionNode(): nextNameIsProperty");
+		//System.out.println("analyseFunctionNode(): nextNameIsProperty");
 		nextNameIsProperty = true;
 	}	
 
@@ -634,13 +655,13 @@ public class SmellDetector {
 		// nextName would be properties such as this.name = ... defined in a function 
 		if (ASTNode.depth() > currentObjectNodeDepth){
 			if (currentPrototype==""){	// also check if the previous identifier should actually be the object
-				System.out.println("analysePropertyGetNode(): nextNameIsProperty");
+				//System.out.println("analysePropertyGetNode(): nextNameIsProperty");
 				nextNameIsProperty = true;
 			}
 		}
 		else{ // nextName would be an object outside the function that is using a property or assigning a prototype
 			nextNameIsObject = true;
-			System.out.println("analysePropertyGetNode(): nextNameIsObject");
+			//System.out.println("analysePropertyGetNode(): nextNameIsObject");
 		}
 	}
 
@@ -652,11 +673,11 @@ public class SmellDetector {
 			jsObjects.add(newJSObj);
 			currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
 			currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth
-			System.out.println("Object created using new from function: " + candidateObjectName);
+			//System.out.println("Object created using new from function: " + candidateObjectName);
 		}else{
-			System.out.println("Already existing object: " + candidateObjectName);
+			//System.out.println("Already existing object: " + candidateObjectName);
 		}
-		System.out.println("analyseNewExpressionNode(): nextNameIsPrototype");
+		//System.out.println("analyseNewExpressionNode(): nextNameIsPrototype");
 		nextNameIsPrototype = true;
 	}
 
@@ -669,17 +690,17 @@ public class SmellDetector {
 		FunctionCall fcall = (FunctionCall) ASTNode;
 		currentPrototype = getPrototypeOfObjectCreateStyle(fcall.debugPrint());
 		if (currentPrototype!=""){
-			System.out.println("Prototype is :" + currentPrototype);
+			//System.out.println("Prototype is :" + currentPrototype);
 
 			JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(currentIdentifier, ASTNode.depth(), ASTNode.getLineno()+1);
 			if (!objectExists(newJSObj)){		// add the new object if does not already exist
 				jsObjects.add(newJSObj);
 				currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
 				currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth
-				System.out.println("A new object is used: " + currentIdentifier);
+				//System.out.println("A new object is used: " + currentIdentifier);
 			}
 
-			System.out.println("The prototype for current object: " + jsObjects.get(currentObjectIndex).getName() + " is: " + currentPrototype);
+			//System.out.println("The prototype for current object: " + jsObjects.get(currentObjectIndex).getName() + " is: " + currentPrototype);
 			jsObjects.get(currentObjectIndex).setPrototype(currentPrototype);
 
 		}
@@ -698,7 +719,8 @@ public class SmellDetector {
 			//System.out.println("consecutivePropertyGet : " + consecutivePropertyGet);
 			consecutivePropertyGet++;
 			lastMessageChain = consecutivePropertyGet;
-			System.out.println("lastMessageChain: " + lastMessageChain);
+			//System.out.println("lastMessageChain: " + lastMessageChain);
+			
 			// check if long meassage chain found
 			if (consecutivePropertyGet >= MAX_LENGTH_OF_MESSAGE_CHAIN){
 				longMessageFound.add((ASTNode.getLineno()+1));
@@ -712,25 +734,8 @@ public class SmellDetector {
 	}
 
 
-	// Amin: making a string representation for ast
-	/*
-87	      CALL 4 31
-87	        GETPROP 0 13
-87	          NAME 0 6 Object
-94	          NAME 7 6 create
-101	        GETPROP 14 16
-101	          NAME 0 6 Object
-108	          NAME 7 9 prototype
-
-134	        CALL 7 21
-134	          GETPROP 0 13
-134	            NAME 0 6 Object
-141	            NAME 7 6 create
-148	          NAME 14 6 person
-	 */
-	
 	/**
-	 * Detecting object created by using Object.create() style and return its prototype
+	 * Detecting objects which are created using Object.create() style and return their prototypes
 	 * The astDebugFormat will be parsed to get the corresponding properties
 	 * Return null if the pattern Object.create was not found
 	 */
@@ -808,7 +813,7 @@ public class SmellDetector {
 	public boolean objectExists(JavaScriptObjectInfo jsObject){
 		for (JavaScriptObjectInfo o: jsObjects)
 			if (o.getName().equals(jsObject.getName())){
-				System.out.println("object " + jsObject.getName() + " already exist!");
+				//System.out.println("object " + jsObject.getName() + " already exist!");
 				return true;
 			}
 		return false;
@@ -821,20 +826,16 @@ public class SmellDetector {
 			if (jsObjects.get(i).getName().equals(jsObject.getName())){
 				currentObjectNodeDepth = jsObjects.get(i).getASTDepth();	// current object is now at the end of jsObjects list
 				currentObjectIndex = i;
-				System.out.println("Current object set to :" + jsObjects.get(i).getName() + " at depth: " + currentObjectNodeDepth);
+				//System.out.println("Current object set to :" + jsObjects.get(i).getName() + " at depth: " + currentObjectNodeDepth);
 				return;
 			}
 		}
 	}
 
 
-	/**
-	 * TODO
-	 */
 	private void isSwitchSmell() {
 
 		//System.out.println("switch found at line: " + (ASTNode.getLineno()+1));
-		
 		SwitchCase sc = (SwitchCase)ASTNode;
 		if (sc.getStatements().size() > MAX_NUMBER_OF_SWITCHCASE)
 			switchFound.add((ASTNode.getLineno()+1));

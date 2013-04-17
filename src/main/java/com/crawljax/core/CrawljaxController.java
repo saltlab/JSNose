@@ -41,14 +41,11 @@ public class CrawljaxController implements CrawlQueueManager {
 
 	/**
 	 *  Added by Amin: 
-	 *  NumCandidateClickables: stores the number of candidate clickables in the whole. It is static to be shared among all crawlers.
-	 *  crawlerList: stores the crawler threads waiting to be notified
 	 *  diverseCrawling: set it true if you wish to do diverse crawling. The default value is false.
 	 *  efficientCrawling: set it true if you wish to do diverse crawling. The default value is false.
 	 *  JSCountList: keeping track of executed lines of all js
 	 *  fstream: used to write stats about coverage and crawled states, etc.
 	 */
-	public static int NumCandidateClickables = 0;
 	private ArrayList<Crawler> waitingCrawlerList = new ArrayList<Crawler>();
 	private boolean diverseCrawling = false;
 	private boolean efficientCrawling = false;

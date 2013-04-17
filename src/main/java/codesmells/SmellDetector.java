@@ -3,7 +3,6 @@ package codesmells;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import org.mozilla.javascript.ast.*;
 
 /**
@@ -20,10 +19,14 @@ public class SmellDetector {
 	private static final int MAX_LENGTH_OF_MESSAGE_CHAIN = 3;
 	private static final int MAX_NUMBER_OF_SWITCHCASE = 3;
 	private static final int MAX_LENGTH_OF_SCOPE_CHAIN = 3;
+	private static final double BASE_CLASS_USAGE_RATIO = 0.33;
 
 	private AstNode ASTNode;
 
 	private static ArrayList<JavaScriptObjectInfo> jsObjects = new ArrayList<JavaScriptObjectInfo>();
+	
+	private static ArrayList<FunctionInfo> jsFunctions = new ArrayList<FunctionInfo>();
+
 
 	private String candidateObjectName = "";		// this will be set to name of any variable and if detected as object will be added to jsObjects
 	private boolean nextNameIsProperty = false;		// this is to distinguish properties of an object from other var/names
@@ -58,11 +61,17 @@ public class SmellDetector {
 	private int scopeChainLength = 0;
 	private static ArrayList<Integer> longScopeChainFound = new ArrayList<Integer>();	// keeping line number of the inner function of a deep closure
 
+	private static int inlineJavaScriptLines = 0;
+	private static ArrayList<String> inlineJavaScriptScopeName = new ArrayList<String>();	// keeping scope name (js file name) where inline JavaScript is detected
 	
-//	private static ArrayList<String> globals = new ArrayList<String>();	// keeping global variables
-//	private static ArrayList<String> locals = new ArrayList<String>();	// keeping local variables
-//	private static ArrayList<Integer> localsLineNumber = new ArrayList<Integer>();	// keeping line number of local variables
-//	private boolean nextIsLocal = false;
+	private static ArrayList<String> globals = new ArrayList<String>();	// keeping global variables
+	
+	public static void setGlobals(ArrayList<String> globals) {
+		SmellDetector.globals = globals;
+	}
+
+	
+	private static ArrayList<String> refusedBequestObjects = new ArrayList<String>();	// keeping objects which refuse bequests
 	
 	public SmellDetector() {
 		ASTNode = null;
@@ -132,9 +141,10 @@ public class SmellDetector {
 			System.out.println("Smelly switch statement found at line: " + switchFound.get(i));
 		
 		
-		/*
-		 * JavaScript Specific Smells
-		 */
+		System.out.println("********** COUPLING JS/HTML **********");
+		System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
+		for (int i=0;i<inlineJavaScriptScopeName.size();i++)
+			System.out.println("Scope having the inline JavaScript: " + inlineJavaScriptScopeName.get(i));
 		
 
 		// Long scope chain can be also used to detect callback. More detection process for callback is to dynamically check if the type of a parameter is function
@@ -145,12 +155,24 @@ public class SmellDetector {
 
 		
 		
+		//System.out.println("********** OBJECT LIST **********");
+		//for (JavaScriptObjectInfo o: jsObjects)
+		//	System.out.println(o);
 		
+
 		
+		// because globals are extracted at runtime, they are not available in the first execution of this part of code
+		if (globals.size() > 0){
+			System.out.println("********** EXCESSIVE GLOBAL VARIABLES **********");
+			System.out.println("Number of global variables: " + globals.size());
+			System.out.println("List of  global variables: " + globals);
+		}
+
 		
-		System.out.println("********** OBJECT LIST **********");
-		for (JavaScriptObjectInfo o: jsObjects)
-			System.out.println(o);
+		//System.out.println("FUNCTIONS ARE: ");
+		//for (int i=0;i<jsFunctions.size();i++)
+		//	System.out.println(jsFunctions.get(i).getName());
+		
 	}
 	
 	/**
@@ -225,8 +247,10 @@ public class SmellDetector {
 
 
 						// detecting refused bequest
-						if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < 0.33)
-							System.out.println("Detected refused bequest for object: " + jso.getName());
+						if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < BASE_CLASS_USAGE_RATIO){
+							//System.out.println("Detected refused bequest for object: " + jso.getName());
+							refusedBequestObjects.add(jso.getName());
+						}
 
 
 
@@ -271,31 +295,24 @@ public class SmellDetector {
 		}
 	}
 
+	
+	
 	/**
 	 * Analysing ASTNode for code smells.
-	 * This is to the following smells:
-	 * 1. Long list of parameters
-	 * 2. Long methods
-	 * 3. Long message chain
-	 * 4. Lazy object
-	 * 5. Long prototype chain
-	 * 
-	 * @param node
-	 *            The AST node that is currently visited.
 	 */
 	public void analyseAstNode() {
-
 	
 		String ASTNodeName = ASTNode.shortName();
+		int ASTDepth = ASTNode.depth();
 		
-		System.out.println("node.shortName() : " + ASTNode.shortName());
-		System.out.println("node.depth() : " + ASTNode.depth());
+		System.out.println("node.shortName() : " + ASTNodeName);
+		System.out.println("node.depth() : " + ASTDepth);
 		System.out.println("node.getLineno() : " + (ASTNode.getLineno()+1));
 		
 		checkLongMessageChain();   // also used to detect message chain used in object recognition
 
 		// check if we are in the up the currentObjectNodeDepth
-		if (ASTNode.depth() < currentObjectNodeDepth && lastMessageChain==1 && ignoreDepthChange==false){  // dealing with a.b.c = ... patterns  
+		if (ASTDepth < currentObjectNodeDepth && lastMessageChain==1 && ignoreDepthChange==false){  // dealing with a.b.c = ... patterns  
 			nextNameIsProperty = false;
 			//nextNameIsObject = true;
 			//System.out.println("analyseAstNode(): Level changed! nextNameIsObject");
@@ -303,7 +320,7 @@ public class SmellDetector {
 		}
 		
 		// check if we are in LHS of the current assignment
-		if (ASTNode.depth()==assignmentNodeDepth+1){
+		if (ASTDepth==assignmentNodeDepth+1){
 			if (assignmentLHSVisited == false){
 				assignmentLHSVisited = true;
 			}else
@@ -336,31 +353,13 @@ public class SmellDetector {
 		else if (ASTNodeName.equals("SwitchCase"))
 			isSwitchSmell();
 		
-		
-		
 
-
-
-		
-		//System.out.println("node.toSource() : " + node.toSource());
-		
 		System.out.println();
-		
+
+		//System.out.println("node.toSource() : " + node.toSource());
 		//System.out.println("node.getType() : " + node.getType());
 		//System.out.println("node.getAstRoot() : " + node.getAstRoot());
 		//System.out.println("node.debugPrint() : " + node.debugPrint());
-
-		/**** TODO
-		
-		//	System.out.println("printing ASTNode " + ASTNode.toSource());
-
-		
-		if (!((ASTNode instanceof FunctionNode || ASTNode instanceof ReturnStatement || ASTNode instanceof SwitchCase || 
-				ASTNode instanceof AstRoot || ASTNode instanceof ExpressionStatement || ASTNode instanceof BreakStatement || 
-				ASTNode instanceof ContinueStatement || ASTNode instanceof ThrowStatement || ASTNode instanceof VariableDeclaration))) {// || node instanceof ExpressionStatement || node instanceof BreakStatement || node instanceof ContinueStatement || node instanceof ThrowStatement || node instanceof VariableDeclaration || node instanceof ReturnStatement || node instanceof SwitchCase)) {
-			return;
-		}
-		****/
 	}
 
 
@@ -541,30 +540,67 @@ public class SmellDetector {
 	 * Extracting objects created by new keyword in javaScript
 	 */
 	public void analyseFunctionNode() {
-
-		// detecting long methods
-		isLongMethod();
-		
-		// detecting long parameter list
-		hasManyParameters();
-		
+	
 		FunctionNode f = (FunctionNode) ASTNode;
-		//System.out.println(f.debugPrint());
+
+		String fName = "";
+		if (f.getFunctionName()!=null){
+			fName = f.getFunctionName().getIdentifier();
+		}
 		
+		int numOfParam = f.getParams().size();
+		int lineNumber = ASTNode.getLineno()+1;
+		int fLength = f.getEndLineno() - f.getLineno();
+		int fDepth = ASTNode.depth();
+		
+		//System.out.println(f.debugPrint());
+
+		// adding the function to the list of jsFunctions if does not already exist
+		FunctionInfo newFunction = new FunctionInfo(fName, numOfParam, fLength, lineNumber);
+		
+		boolean functionExist = false;
+		for (FunctionInfo jsfn : jsFunctions)
+			if (jsfn.getName().equals(newFunction.getName())){
+				functionExist = true;
+				break;
+			}
+		if (functionExist == false)
+			jsFunctions.add(newFunction);
+				
+		
+		/**
+		 * Detecting long method/function
+		 */
+		if (fLength > MAX_METHID_LENGTH){
+			longMethodFound.add(lineNumber);
+			//System.out.println("This function is long. Starts from line " + (func.getLineno()+1) + " to line " + (func.getEndLineno()+1));
+		}
+		
+		
+		/**
+		 * Detecting long parameter list
+		 */
+		if (numOfParam >= MAX_NUMBER_OF_PARAMETERS){
+			//System.out.println("function " + func.getName() + " has " + func.getParams().size() + " parameters in line " + (func.getLineno()+1));
+			longParameterListFound.add(lineNumber);
+		}
+
+
+
 		// keep track of nested function (scope chain)
-		if (ASTNode.depth() > lastFunctionDepth){
+		if (fDepth > lastFunctionDepth){
 			scopeChainLength++;
-			System.out.println("scopeChainLength is :" + scopeChainLength + " at line: " + (ASTNode.getLineno()+1));
+			System.out.println("scopeChainLength is :" + scopeChainLength + " at line: " + lineNumber);
 			if (scopeChainLength >= MAX_LENGTH_OF_SCOPE_CHAIN)
-				longScopeChainFound.add((ASTNode.getLineno()+1));
+				longScopeChainFound.add(lineNumber);
 		}else
 			scopeChainLength = 1;
-		lastFunctionDepth = ASTNode.depth();
+		lastFunctionDepth = fDepth;
 		
 			
 		
 		if (f.getFunctionName()!=null){
-			candidateObjectName = f.getFunctionName().getIdentifier();
+			candidateObjectName = fName;
 			System.out.println("FUNCTION NAME IS: " + candidateObjectName);
 		}
 
@@ -572,7 +608,7 @@ public class SmellDetector {
 		   if getFunctionName==null then candidateObjectName is the name of object (filled in the last ASTNode visit) 
 		   to get created by using new on the noname function
 		 */
-		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
+		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, fDepth, lineNumber);
 		if (!objectExists(newJSObj)){
 			newJSObj.setType("FunctionCandidate"); // an object may later be instantiated form this function
 			// adding parameters as properties of the object
@@ -583,7 +619,7 @@ public class SmellDetector {
 			jsObjects.add(newJSObj);
 
 			currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
-			currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth
+			currentObjectNodeDepth = fDepth;	// setting current object node depth
 			System.out.println("Object candidate function name: " + candidateObjectName);
 		}
 		System.out.println("analyseFunctionNode(): nextNameIsProperty");
@@ -591,7 +627,9 @@ public class SmellDetector {
 	}	
 
 
-
+	/**
+	 * Analysing depth and determining if next name is property or object
+	 */
 	public void analysePropertyGetNode() {
 		// nextName would be properties such as this.name = ... defined in a function 
 		if (ASTNode.depth() > currentObjectNodeDepth){
@@ -672,38 +710,6 @@ public class SmellDetector {
 			consecutivePropertyGet = 0;
 		}
 	}
-
-
-	
-	/*
-	 * Detecting long parameter list
-	 */
-	private boolean hasManyParameters(){
-		FunctionNode func = (FunctionNode) ASTNode;
-		if (func.getParams().size() >= MAX_NUMBER_OF_PARAMETERS){
-			//System.out.println("function " + func.getName() + " has " + 
-			//		func.getParams().size() + " parameters in line " + (func.getLineno()+1));
-			longParameterListFound.add((ASTNode.getLineno()+1));
-			return true;
-		}
-		return false;
-	}
-
-	/*
-	 * Detecting long method/function
-	 */
-	private boolean isLongMethod(){
-		FunctionNode func = (FunctionNode) ASTNode;
-		if (func.getEndLineno() - func.getLineno() > MAX_METHID_LENGTH){
-			longMethodFound.add((ASTNode.getLineno()+1));
-			//System.out.println("This function is long. Starts from line " + (func.getLineno()+1) + " to line " + (func.getEndLineno()+1));
-			return true;
-		}
-		return false;
-	}
-		
-
-
 
 
 	// Amin: making a string representation for ast
@@ -843,14 +849,61 @@ public class SmellDetector {
 	 * TODO: distinguish between server-side generated codes and original inline codes
 	 * 
 	 */
-	public static void analyseCoupling(String code) {
+	public static void analyseCoupling(String scopeName, String code) {
 		// counting lines of inline javascript 
 		String[] lines = code.split("\r\n|\r|\n");
-		System.out.println("There are " + lines.length + " lines of JavaScript code inside your HTML");
-		System.out.println("code is: " + code);
+		//System.out.println("There are " + lines.length + " lines of JavaScript code inside your HTML");
+		//System.out.println("code is: " + code);
+		if (!inlineJavaScriptScopeName.contains(scopeName)){
+			inlineJavaScriptScopeName.add(scopeName);
+			inlineJavaScriptLines += lines.length;
+		}
 	}
 	
+
 	
+	class FunctionInfo{
+
+		String name;
+		int numberOfParameters;
+		int linesOfCode;
+		int lineNumber;
+		
+		public FunctionInfo(String name, int numberOfParameters, int linesOfCode, int lineNumber) {
+			super();
+			this.name = name;
+			this.numberOfParameters = numberOfParameters;
+			this.linesOfCode = linesOfCode;
+			this.lineNumber = lineNumber;
+		}
+		
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		public int getNumberOfParameters() {
+			return numberOfParameters;
+		}
+		public void setNumberOfParameters(int numberOfParameters) {
+			this.numberOfParameters = numberOfParameters;
+		}
+		public int getLinesOfCode() {
+			return linesOfCode;
+		}
+		public void setLinesOfCode(int linesOfCode) {
+			this.linesOfCode = linesOfCode;
+		}
+		public int getLineNumber() {
+			return lineNumber;
+		}
+		public void setLineNumber(int lineNumber) {
+			this.lineNumber = lineNumber;
+		}
+		
+	};
+
 	
 }
 

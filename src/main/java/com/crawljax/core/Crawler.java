@@ -9,6 +9,7 @@ import java.util.Random;
 import org.apache.log4j.Logger;
 
 import codesmells.JavaScriptObjectInfo;
+import codesmells.SmellDetector;
 
 import com.crawljax.browser.EmbeddedBrowser;
 import com.crawljax.core.configuration.CrawljaxConfigurationReader;
@@ -336,20 +337,16 @@ public class Crawler implements Runnable {
 
 
 
-		// Amin: state-space estimation
-		//String est = this.controller.getSession().getStateFlowGraph().updateEstimator();
-		//this.controller.writeEstimationToFile( est ); // est : estimated and actual state-space coverage 
-		CrawljaxController.NumCandidateClickables--;
-
-
 		
+		/**
+		 * Dynamic extraction of javaScript objects and properties in browser 
+		 */
 		
-		// extracting true objects in javaScript
-		
-		
+		// getCoverage should be set true for dead unused/code detection
+		boolean getCoverage = false;
 	
 		/**
-		 * Fetching list of globals
+		 * Fetching list of globals dynamically at runtime
 		 */
 		try{
 			Object globals =  this.browser.executeJavaScript("" +
@@ -362,9 +359,7 @@ public class Crawler implements Runnable {
 					" return ownPropertiesArray;");
 			ArrayList globalVars = (ArrayList) globals;
 			ArrayList<String> globalsVarList = new ArrayList<String>();	// keeping global variables
-			
 			Object acceptable = null;
-
 			for (int i=0;i<globalVars.size();i++){
 				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")){
 					acceptable =  this.browser.executeJavaScript("if (typeof " + globalVars.get(i) + " !== 'function') return true; else return false;");
@@ -374,9 +369,12 @@ public class Crawler implements Runnable {
 					}
 				}
 			}
-			System.out.println("********** GLOBALS **********");
-			System.out.println("Total number of global variables: " + globalsVarList.size());
-			System.out.println("Globals are: " + globalsVarList);
+			//System.out.println("********** GLOBALS **********");
+			//System.out.println("Total number of global variables: " + globalsVarList.size());
+			//System.out.println("Globals are: " + globalsVarList);
+			
+			// send the list to the smell detector main class
+			SmellDetector.setGlobals(globalsVarList);
 			
 		}catch (Exception e) {
 			LOGGER.info("Could not execute script");
@@ -449,15 +447,6 @@ public class Crawler implements Runnable {
 					//		" return Object.getPrototypeOf(" + candidateJSObject + ");");
 					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
 
-					//prototype =  this.browser.executeJavaScript("" +
-					//		" return Object.getPrototypeOf(Object.getPrototypeOf(" + candidateJSObject + "));");
-					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
-				
-
-					//prototype =  this.browser.executeJavaScript("" +
-					//		" return Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(" + candidateJSObject + ")));");
-					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
-
 					
 					//Object prototypeChain =  this.browser.executeJavaScript("" +
 					//		"var prototypeChainArray = []; " +
@@ -485,31 +474,26 @@ public class Crawler implements Runnable {
 
 		
 		
-
 		if (this.fireEvent(eventable)) {
 			StateVertix newState =
 				new StateVertix(getBrowser().getCurrentUrl(), controller.getSession()
 						.getStateFlowGraph().getNewStateName(), getBrowser().getDom(),
 						this.controller.getStrippedDom(getBrowser()), backTrackPath);
 
-
-			// ALWAYS BE TRUE FOR THIS PROJECT
-			boolean getCoverage = true;
 			
 			if (getCoverage){
 				//Amin: calculate code coverage
 				for (String modifiedJS : JSModifyProxyPlugin.getModifiedJSList()){
 					//System.out.println("MODIFIED CODES ARE: " + modifiedJS);
-					/*try{
+					try{
 						Object counter =  this.browser.executeJavaScript("return " + modifiedJS + "_counter;");
 						this.controller.setCountList(modifiedJS, counter);
 					}catch (Exception e) {
 						LOGGER.info("Could not execute script");
-					}*/
+					}
 
 			
 				}
-	
 				
 				
 				double cov = this.controller.getCoverage();
@@ -518,6 +502,8 @@ public class Crawler implements Runnable {
 					controller.getSession().getStateFlowGraph().setLatestCoverage(cov);
 			}
 
+			
+			
 
 			boolean domMutationNotifierPluginCheck = this.controller.getDomMutationNotifierPluginCheck();
 			boolean isDomChanged=true;
@@ -698,8 +684,6 @@ public class Crawler implements Runnable {
 			// update crawlActions
 			orrigionalState.filterCandidateActions(candidateElements);
 
-			// Amin: This is the count of candidates after filtering...
-			CrawljaxController.NumCandidateClickables += orrigionalState.getNumCandidateElements();
 		}else
 			// Amin: just for logging
 			// LOGGER.info("Outer # candidateElements for state " + orrigionalState.getName() + " is ZERO!");
@@ -1009,8 +993,6 @@ public class Crawler implements Runnable {
 				// update crawlActions
 				orrigionalState.filterCandidateActions(candidateElements);
 
-				// Amin: This is the count of candidates after filtering...
-				CrawljaxController.NumCandidateClickables += orrigionalState.getNumCandidateElements();
 			}else
 				//LOGGER.info("Outer # candidateElements for state " + orrigionalState.getName() + " is ZERO!");
 

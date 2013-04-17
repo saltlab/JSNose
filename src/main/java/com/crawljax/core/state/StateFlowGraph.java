@@ -14,7 +14,6 @@ import org.jgrapht.graph.DirectedMultigraph;
 import java.util.Stack;
 
 import com.crawljax.core.CandidateElement;
-import com.crawljax.core.CrawljaxEstimator;
 import com.crawljax.util.TreeEditDist.RTED_InfoTree_Opt;
 import com.google.common.util.concurrent.Service.State;
 
@@ -56,9 +55,6 @@ public class StateFlowGraph {
 	private boolean diverseCrawling = false;
 	private boolean efficientCrawling = false;
 	private ArrayList<StateVertix> notFullExpandedStates = new ArrayList<StateVertix>();
-
-	private static final int STATE_SPACE_SIZE = 10;  // should be set based on previous crawl of the whole state-space
-	private CrawljaxEstimator estimator;
 
 	//Amin: later remove
 	boolean done = false;
@@ -109,7 +105,6 @@ public class StateFlowGraph {
 		this();
 		sfg.addVertex(initialState);
 		notFullExpandedStates.add(initialState);
-		this.estimator = new CrawljaxEstimator(STATE_SPACE_SIZE);
 	}
 
 	/**
@@ -781,16 +776,6 @@ public class StateFlowGraph {
 		res /=  (sfg.vertexSet().size() * (sfg.vertexSet().size()-1));
 		done = true;
 		return res;
-	}
-	
-	
-	/**
-	 * Estimator
-	 */
-	public String updateEstimator(){
-		estimator.updateEstimator(getAllStates().size(), getAllEdges().size());
-		System.out.println(estimator);
-		return estimator.toString();
 	}
 	
 

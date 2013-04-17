@@ -216,8 +216,12 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 		}
 		try {
 
+			/**
+			 * Analysing inline javascript smell
+			 */
 			if (scopename.contains("script")){
-				SmellDetector.analyseCoupling(input);
+				//System.out.println("scopename : " + getJSName(scopename));
+				SmellDetector.analyseCoupling(getJSName(scopename), input);
 			}
 
 			AstRoot ast = null;
@@ -235,7 +239,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			/* parse some script and save it in AST */
 			ast = rhinoParser.parse(new String(input), scopename, 0);
 			
-			System.out.println(ast.debugPrint());
+			//System.out.println(ast.debugPrint());
 			
 			//System.out.println(makeTreeString(ast.debugPrint()));
 			

@@ -71,11 +71,6 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	// Amin: this is needed for retrieving the corresponding array
 	private static List<String> modifiedJS;
 	
-	/**
-	 * Amin: this list is for keeping name of candidate javascript objects found in the code
-	 * they are called candidate since some my not be actual objects
-	 */
-	private static List<String> candidateJSObjectList;
 
 	private EmbeddedBrowser browser;
 
@@ -85,9 +80,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	}
 	
 
-	public static List<String> getcandidateJSObjectList(){
-		return candidateJSObjectList;
-	}
+
 
 	
 	/**
@@ -99,7 +92,6 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	public JSModifyProxyPlugin(JSASTModifier modify) {
 		excludeFilenamePatterns = new ArrayList<String>();
 		modifiedJS = new ArrayList<String>();
-		candidateJSObjectList = new ArrayList<String>();
 		modifier = modify;
 	}
 
@@ -366,11 +358,9 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 								objName+=astDebugFormat.charAt(j);
 								j++;
 							}
-
-							if (!candidateJSObjectList.contains(objName)){
-								candidateJSObjectList.add(objName);
-								//System.out.println("objName: " + objName);
-							}
+							
+							//objName has the identifier name
+							
 						}
 						
 						result += tempRead;

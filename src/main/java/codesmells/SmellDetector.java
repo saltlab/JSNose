@@ -84,6 +84,17 @@ public class SmellDetector {
 	
 	private static HashSet<Integer> longPrototypeChainObjLocation = new HashSet<Integer>();	// keeping objects with long prototype chain
 	
+	/**
+	 * Amin: this list is for keeping name of candidate javascript objects found in the code
+	 * they are called candidate since some my not be actual objects
+	 */
+	private static List<String> candidateJSObjectList = new ArrayList<String>();
+
+	public static List<String> getcandidateJSObjectList(){
+		return candidateJSObjectList;
+	}
+	
+	
 	
 	public SmellDetector() {
 		ASTNode = null;
@@ -428,8 +439,18 @@ public class SmellDetector {
 
 		// setting candidateObjectName and currentIdentifier
 		candidateObjectName = ((Name)ASTNode).getIdentifier();
+		
+		// this is to keep track during dynamic execution
+		if (!candidateJSObjectList.contains(candidateObjectName)){
+			candidateJSObjectList.add(candidateObjectName);
+			//System.out.println("objName: " + objName);
+		}
+		
 		//System.out.println("idenfifier: " + candidateObjectName );
 		currentIdentifier = candidateObjectName;	// this is to be used in method analyseFunctionCallNode() if a pattern of Object.create(x) was detected where x is the currentPrototype
+	
+		
+		
 		
 
 		/*
@@ -809,6 +830,24 @@ public class SmellDetector {
 	}
 
 
+	public static void addDynamicObject(JavaScriptObjectInfo dynamicObject){
+
+		// check if the dynamic object was already detected (by static analysis)
+		for (JavaScriptObjectInfo o: jsObjects)
+			if (o.getName().equals(dynamicObject.getName())){
+				//System.out.println("object " + dynamicObject.getName() + " already exist!");
+				// now try to add properties
+				for (String own: dynamicObject.getOwnPropetries())
+					o.addOwnProperty(own);
+				for (String inh: dynamicObject.getInheritedPropetries())
+					o.addOwnProperty(inh);
+				return;
+			}
+
+		// add the new dynamic object to the list
+		jsObjects.add(dynamicObject);
+		
+	}
 
 	public boolean objectExists(JavaScriptObjectInfo jsObject){
 		for (JavaScriptObjectInfo o: jsObjects)

@@ -389,13 +389,13 @@ public class Crawler implements Runnable {
 	
 		
 		ArrayList<JavaScriptObjectInfo> jsObjects = new ArrayList<JavaScriptObjectInfo>();
-		for (String candidateJSObject : JSModifyProxyPlugin.getcandidateJSObjectList()){
+		for (String candidateJSObject : SmellDetector.getcandidateJSObjectList()){
 			try{
 			Object isObject =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"object\") return true;");
 			//System.out.println(isObject + " "+candidateJSObject);
 			if (isObject!=null && isObject.toString().equals("true")){
 				System.out.println(candidateJSObject + " is an object!");
-				JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0,0);
+				JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0,-1);
 				
 				//Adding properties and prototype to the newJSObj
 
@@ -435,8 +435,10 @@ public class Crawler implements Runnable {
 				}
 
 				
+				SmellDetector.addDynamicObject(newJSObj);
+				
 				//Adding prototype chain to the newJSObj
-				Object prototype;
+				/*Object prototype;
 				if (!candidateJSObject.equals("document") && !candidateJSObject.equals("top") && !candidateJSObject.equals("window")){
 				//if (candidateJSObject.equals("dog")){
 					prototype =  this.browser.executeJavaScript("" +
@@ -459,11 +461,8 @@ public class Crawler implements Runnable {
 					//		" return prototypeChainArray;");
 					//System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
 				}
-				
+				*/
 
-				
-				
-				
 				System.out.println();
 
 			}

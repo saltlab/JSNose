@@ -221,7 +221,8 @@ public class SmellDetector {
 			 * Detecting lazy object
 			 */
 			if (ownPropetries.size() < MIN_OBJECT_PROPERTIES){
-				sl = new SmellLocation(jso.getJsFileName(),jso.getJsFileName(),jso.getLineNumber());
+				sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
+				System.out.println(jso.getName() + " is a lazy object because ownPropetries is " + ownPropetries);
 				lazyObjectsLocation.add(sl);
 			}
 			
@@ -238,7 +239,9 @@ public class SmellDetector {
 				}
 			}
 			if (LOC >= MAX_OBJECT_LOC || ownPropetries.size() > MAX_OBJECT_PROPERTIES){
-				sl = new SmellLocation(jso.getJsFileName(),jso.getJsFileName(),jso.getLineNumber());
+				sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
+				
+				System.out.println(jso.getName() + " is a large object because LOC is " + LOC + " and ownPropetries.size() is " + ownPropetries.size());
 				largeObjectsLocation.add(sl);
 			}
 				
@@ -293,7 +296,7 @@ public class SmellDetector {
 						 */
 						if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < BASE_CLASS_USAGE_RATIO){
 							//System.out.println("Detected refused bequest for object: " + jso.getName());
-							sl = new SmellLocation(jso.getJsFileName(),jso.getJsFileName(),jso.getLineNumber());
+							sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
 							refusedBequestObjLocation.add(sl);
 						}
 
@@ -313,7 +316,7 @@ public class SmellDetector {
 						//System.out.println("prototypeChain is: " + prototypeChain);
 						if (prototypeChain.size() >= MAX_LENGTH_OF_PROTOTYPE){
 							//System.out.println("Long prototype chain found for object: " + jso.getName() + " defined at line: " + jso.getLineNumber());
-							sl = new SmellLocation(jso.getJsFileName(),jso.getJsFileName(),jso.getLineNumber());
+							sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
 							longPrototypeChainObjLocation.add(sl);
 						}
 						

@@ -362,7 +362,7 @@ public class Crawler implements Runnable {
 			HashSet<String> globalsVarList = new HashSet<String>();	// keeping global variables
 			Object acceptable = null;
 			for (int i=0;i<globalVars.size();i++){
-				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")){
+				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")  && !globalVars.get(i).equals("top")  && !globalVars.get(i).equals("navigator")){
 					acceptable =  this.browser.executeJavaScript("if (typeof " + globalVars.get(i) + " !== 'function') return true; else return false;");
 					if (acceptable.toString().equals("true")){
 						globalsVarList.add(globalVars.get(i).toString());
@@ -370,9 +370,9 @@ public class Crawler implements Runnable {
 					}
 				}
 			}
-			//System.out.println("********** GLOBALS **********");
-			//System.out.println("Total number of global variables: " + globalsVarList.size());
-			//System.out.println("Globals are: " + globalsVarList);
+			System.out.println("********** GLOBALS **********");
+			System.out.println("Total number of global variables: " + globalsVarList.size());
+			System.out.println("Globals are: " + globalsVarList);
 			
 			// send the list to the smell detector main class
 			SmellDetector.setGlobals(globalsVarList);

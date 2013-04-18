@@ -144,7 +144,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 		excludeFilenamePatterns.add(".*dojo.xd.js?.*");
 		excludeFilenamePatterns.add(".*yuiloader.js?.*");
 		excludeFilenamePatterns.add(".*google.*");
-		excludeFilenamePatterns.add(".*min.*.js?.*");
+		//excludeFilenamePatterns.add(".*min.*.js?.*");
 		excludeFilenamePatterns.add(".*pack.*.js?.*");
 		excludeFilenamePatterns.add(".*compressed.*.js?.*");
 		excludeFilenamePatterns.add(".*rpc.*.js?.*");
@@ -208,12 +208,16 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 		}
 		try {
 
+			String jsName = getJSName(scopename);
+			
+			SmellDetector.setJSName(jsName);
+
 			/**
 			 * Analysing inline javascript smell
 			 */
 			if (scopename.contains("script")){
 				//System.out.println("scopename : " + getJSName(scopename));
-				SmellDetector.analyseCoupling(getJSName(scopename), input);
+				SmellDetector.analyseCoupling(jsName, input);
 			}
 
 			AstRoot ast = null;
@@ -273,7 +277,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 
 			//System.out.println("printing ast " + ast.toSource());
 
-			/* recurse through AST */
+			/* recurse through AST and statically analayze the code for smells*/
 			ast.visit(modifier);
 
 			

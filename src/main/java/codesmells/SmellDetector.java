@@ -14,7 +14,7 @@ import org.mozilla.javascript.ast.*;
 public class SmellDetector {
 
 	// JSNose parameters for smell detection
-	private static final int MAX_METHID_LENGTH = 20;			// function/method length
+	private static final int MAX_METHID_LENGTH = 50;			// function/method length
 	private static final int MAX_NUMBER_OF_PARAMETERS = 4;		// function parameter
 	private static final int MAX_LENGTH_OF_PROTOTYPE = 3;		// prototype chain
 	private static final int MAX_LENGTH_OF_MESSAGE_CHAIN = 3;	// message chain
@@ -46,25 +46,25 @@ public class SmellDetector {
 	private int consecutivePropertyGet = 0;	// This is to store number of consecutive getting of property used to detect long message chain 
 	private int lastMessageChain = 0;		// This is to store last message chain using consecutivePropertyGet 
 	private boolean ignoreDepthChange = false;		// This is also used to decide for a.b.c pattern that c is a property of b not a separate identifier 
-	private static HashSet<Integer> longMessageFound = new HashSet<Integer>();	// keeping line number where a long message occurred
+	private static HashSet<SmellLocation> longMessageFound = new HashSet<SmellLocation>();	// keeping line number where a long message occurred
 	
 	private boolean LHS = false;			// This is to decide if the ASTNode is at the left hand-side of an assignment 
 	private int assignmentNodeDepth = 0;	// This is to store ASTNode depth of assignment to be used for detecting LHS value 
 	private boolean assignmentLHSVisited = false; 
-
+	
 	
 	private boolean CatchClause = false;	// To detect empty Catch Clauses
-	private static HashSet<Integer> emptyCatchFound = new HashSet<Integer>();	// keeping line number where an empty catch occurred
+	private static HashSet<SmellLocation> emptyCatchFound = new HashSet<SmellLocation>();	// keeping line number where an empty catch occurred
 
-	private static HashSet<Integer> longMethodFound = new HashSet<Integer>();	// keeping line number where a long method is defined
+	private static HashSet<SmellLocation> longMethodFound = new HashSet<SmellLocation>();	// keeping line number where a long method is defined
 
-	private static HashSet<Integer> longParameterListFound = new HashSet<Integer>();	// keeping line number where a long parameter list is found
+	private static HashSet<SmellLocation> longParameterListFound = new HashSet<SmellLocation>();	// keeping line number where a long parameter list is found
 
-	private static HashSet<Integer> switchFound = new HashSet<Integer>();	// keeping line number where a switch statement is found
+	private static HashSet<SmellLocation> switchFound = new HashSet<SmellLocation>();	// keeping line number where a switch statement is found
 	
 	private int lastFunctionDepth = 0;
 	private int scopeChainLength = 0;
-	private static HashSet<Integer> longScopeChainFound = new HashSet<Integer>();	// keeping line number of the inner function of a deep closure
+	private static HashSet<SmellLocation> longScopeChainFound = new HashSet<SmellLocation>();	// keeping line number of the inner function of a deep closure
 
 	private static int inlineJavaScriptLines = 0;
 	private static HashSet<String> inlineJavaScriptScopeName = new HashSet<String>();	// keeping scope name (js file name) where inline JavaScript is detected
@@ -76,13 +76,13 @@ public class SmellDetector {
 	}
 
 	
-	private static HashSet<Integer> refusedBequestObjLocation = new HashSet<Integer>();	// keeping objects which refuse bequests
+	private static HashSet<SmellLocation> refusedBequestObjLocation = new HashSet<SmellLocation>();	// keeping objects which refuse bequests
 
-	private static HashSet<Integer> lazyObjectsLocation = new HashSet<Integer>();	// keeping lazy objects
+	private static HashSet<SmellLocation> lazyObjectsLocation = new HashSet<SmellLocation>();	// keeping lazy objects
 
-	private static HashSet<Integer> largeObjectsLocation = new HashSet<Integer>();	// keeping large objects
+	private static HashSet<SmellLocation> largeObjectsLocation = new HashSet<SmellLocation>();	// keeping large objects
 	
-	private static HashSet<Integer> longPrototypeChainObjLocation = new HashSet<Integer>();	// keeping objects with long prototype chain
+	private static HashSet<SmellLocation> longPrototypeChainObjLocation = new HashSet<SmellLocation>();	// keeping objects with long prototype chain
 	
 	/**
 	 * Amin: this list is for keeping name of candidate javascript objects found in the code
@@ -104,6 +104,12 @@ public class SmellDetector {
 		ASTNode = node;
 	}
 
+	private static String jsFileName;
+	
+	public static void setJSName(String jsName) {
+		SmellDetector.jsFileName = jsName;
+	}
+	
 	
 	/**
 	 * Showing list of smells when all AST nodes were visited. The method is static to be called in JSModifyProxyPlugin.modifyJS()
@@ -111,7 +117,9 @@ public class SmellDetector {
 	public static void generateReport(){
 
 		// TODO: write in text file
+		System.out.println("***************************************");
 		System.out.println("********** CODE SMELL REPORT **********");
+		System.out.println("***************************************");
 
 		analyseObjecsList();
 		
@@ -168,10 +176,10 @@ public class SmellDetector {
 		
 	}
 	
-	public static void reportSmell(HashSet<Integer> smell){
+	public static void reportSmell(HashSet<SmellLocation> smell){
 		System.out.println("Number of occurance: " + smell.size());
-		for (int i:smell)
-			System.out.println("Line number: " + i);
+		for (SmellLocation l:smell)
+			System.out.println("Item: " + l.getSmellyItemName() + " in JS file: " + l.getJsFile() +" at line number: " + l.getLineNumber());
 	}	
 	
 
@@ -197,6 +205,7 @@ public class SmellDetector {
 		ArrayList<String> delegatedPropetries = new ArrayList<String>();		// Delegated properties which are defined some where in the prototype chain 
 		ArrayList<JavaScriptObjectInfo> prototypeChain = new ArrayList<JavaScriptObjectInfo>();				// Storing the prototype chain of an object 
 
+		SmellLocation sl;
 		
 		for (JavaScriptObjectInfo jso : jsObjects){
 			usedInheritedPropetries.clear();
@@ -212,7 +221,8 @@ public class SmellDetector {
 			 * Detecting lazy object
 			 */
 			if (ownPropetries.size() < MIN_OBJECT_PROPERTIES){
-				lazyObjectsLocation.add(jso.getLineNumber());
+				sl = new SmellLocation(jso.getJsFileName(),jso.getJsFileName(),jso.getLineNumber());
+				lazyObjectsLocation.add(sl);
 			}
 			
 			
@@ -227,8 +237,10 @@ public class SmellDetector {
 						LOC += jsFunctions.get(j).getLinesOfCode();
 				}
 			}
-			if (LOC >= MAX_OBJECT_LOC || ownPropetries.size() > MAX_OBJECT_PROPERTIES)
-				largeObjectsLocation.add(jso.getLineNumber());
+			if (LOC >= MAX_OBJECT_LOC || ownPropetries.size() > MAX_OBJECT_PROPERTIES){
+				sl = new SmellLocation(jso.getJsFileName(),jso.getJsFileName(),jso.getLineNumber());
+				largeObjectsLocation.add(sl);
+			}
 				
 
 
@@ -281,7 +293,8 @@ public class SmellDetector {
 						 */
 						if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < BASE_CLASS_USAGE_RATIO){
 							//System.out.println("Detected refused bequest for object: " + jso.getName());
-							refusedBequestObjLocation.add(jso.getLineNumber());
+							sl = new SmellLocation(jso.getJsFileName(),jso.getJsFileName(),jso.getLineNumber());
+							refusedBequestObjLocation.add(sl);
 						}
 
 
@@ -300,7 +313,8 @@ public class SmellDetector {
 						//System.out.println("prototypeChain is: " + prototypeChain);
 						if (prototypeChain.size() >= MAX_LENGTH_OF_PROTOTYPE){
 							//System.out.println("Long prototype chain found for object: " + jso.getName() + " defined at line: " + jso.getLineNumber());
-							longPrototypeChainObjLocation.add(jso.getLineNumber());
+							sl = new SmellLocation(jso.getJsFileName(),jso.getJsFileName(),jso.getLineNumber());
+							longPrototypeChainObjLocation.add(sl);
 						}
 						
 
@@ -414,7 +428,8 @@ public class SmellDetector {
 		if (CatchClause==true){
 			if (ASTNode.hasChildren()==false){
 				//System.out.println("Empty catch clause at line: " + (ASTNode.getLineno()+1));
-				emptyCatchFound.add((ASTNode.getLineno()+1));
+				SmellLocation sl = new SmellLocation("empty catch",jsFileName,(ASTNode.getLineno()+1));
+				emptyCatchFound.add(sl);
 			}
 			CatchClause = false;
 		}
@@ -497,6 +512,7 @@ public class SmellDetector {
 
 						candidateObjectName = ((Name)ASTNode).getIdentifier();
 						JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
+						newJSObj.setJsFileName(jsFileName);
 						if (!objectExists(newJSObj)){		// add the new object if does not already exist
 							jsObjects.add(newJSObj);
 							currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
@@ -535,6 +551,7 @@ public class SmellDetector {
 			// either an already found object or a new object. Example is oldObj.newProperty or newObj.newProperty
 			candidateObjectName = ((Name)ASTNode).getIdentifier();
 			JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
+			newJSObj.setJsFileName(jsFileName);
 			if (!objectExists(newJSObj)){		// add the new object if does not already exist
 				jsObjects.add(newJSObj);
 				currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
@@ -562,6 +579,7 @@ public class SmellDetector {
 	public void analyseObjectLiteralNode() {
 		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
 		newJSObj.setType("ObjectLiteral");
+		newJSObj.setJsFileName(jsFileName);
 		jsObjects.add(newJSObj);
 		currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
 		currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth
@@ -614,7 +632,8 @@ public class SmellDetector {
 		 * Detecting long method/function
 		 */
 		if (fLength > MAX_METHID_LENGTH){
-			longMethodFound.add(lineNumber);
+			SmellLocation sl = new SmellLocation(fName, jsFileName,lineNumber);
+			longMethodFound.add(sl);
 			//System.out.println("This function is long. Starts from line " + (func.getLineno()+1) + " to line " + (func.getEndLineno()+1));
 		}
 		
@@ -624,7 +643,8 @@ public class SmellDetector {
 		 */
 		if (numOfParam >= MAX_NUMBER_OF_PARAMETERS){
 			//System.out.println("function " + func.getName() + " has " + func.getParams().size() + " parameters in line " + (func.getLineno()+1));
-			longParameterListFound.add(lineNumber);
+			SmellLocation sl = new SmellLocation(fName, jsFileName,lineNumber);
+			longParameterListFound.add(sl);
 		}
 
 
@@ -633,8 +653,10 @@ public class SmellDetector {
 		if (fDepth > lastFunctionDepth){
 			scopeChainLength++;
 			//System.out.println("scopeChainLength is :" + scopeChainLength + " at line: " + lineNumber);
-			if (scopeChainLength >= MAX_LENGTH_OF_SCOPE_CHAIN)
-				longScopeChainFound.add(lineNumber);
+			if (scopeChainLength >= MAX_LENGTH_OF_SCOPE_CHAIN){
+				SmellLocation sl = new SmellLocation(fName, jsFileName,lineNumber);
+				longScopeChainFound.add(sl);
+			}
 		}else
 			scopeChainLength = 1;
 		lastFunctionDepth = fDepth;
@@ -651,6 +673,7 @@ public class SmellDetector {
 		   to get created by using new on the noname function
 		 */
 		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, fDepth, lineNumber);
+		newJSObj.setJsFileName(jsFileName);
 		if (!objectExists(newJSObj)){
 			newJSObj.setType("FunctionCandidate"); // an object may later be instantiated form this function
 			// adding parameters as properties of the object
@@ -690,6 +713,7 @@ public class SmellDetector {
 	public void analyseNewExpressionNode() {
 		// candidateObjectName was filled in the previous ASTNode visit
 		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
+		newJSObj.setJsFileName(jsFileName);
 		if (!objectExists(newJSObj) && !candidateObjectName.equals("prototype")){
 			jsObjects.add(newJSObj);
 			currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
@@ -714,6 +738,7 @@ public class SmellDetector {
 			//System.out.println("Prototype is :" + currentPrototype);
 
 			JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(currentIdentifier, ASTNode.depth(), ASTNode.getLineno()+1);
+			newJSObj.setJsFileName(jsFileName);
 			if (!objectExists(newJSObj)){		// add the new object if does not already exist
 				jsObjects.add(newJSObj);
 				currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
@@ -744,7 +769,8 @@ public class SmellDetector {
 			
 			// check if long meassage chain found
 			if (consecutivePropertyGet >= MAX_LENGTH_OF_MESSAGE_CHAIN){
-				longMessageFound.add((ASTNode.getLineno()+1));
+				SmellLocation sl = new SmellLocation("Long chain", jsFileName,(ASTNode.getLineno()+1));
+				longMessageFound.add(sl);
 				//System.out.println("Long message chain found!");
 			}
 			// if previous read was also GETPROP
@@ -844,9 +870,9 @@ public class SmellDetector {
 				return;
 			}
 
+		dynamicObject.setJsFileName(jsFileName);
 		// add the new dynamic object to the list
 		jsObjects.add(dynamicObject);
-		
 	}
 
 	public boolean objectExists(JavaScriptObjectInfo jsObject){
@@ -876,8 +902,10 @@ public class SmellDetector {
 
 		//System.out.println("switch found at line: " + (ASTNode.getLineno()+1));
 		SwitchCase sc = (SwitchCase)ASTNode;
-		if (sc.getStatements().size() > MAX_NUMBER_OF_SWITCHCASE)
-			switchFound.add((ASTNode.getLineno()+1));
+		if (sc.getStatements().size() > MAX_NUMBER_OF_SWITCHCASE){
+			SmellLocation sl = new SmellLocation("switch", jsFileName,(ASTNode.getLineno()+1));
+			switchFound.add(sl);
+		}
 	}
 
 
@@ -942,7 +970,64 @@ public class SmellDetector {
 			this.lineNumber = lineNumber;
 		}
 		
-	};
+	}
+
+
+	
+	public static class SmellLocation{
+		String smellyItemName;
+		String jsFile;
+		int lineNumber;
+		
+		public SmellLocation(String smellyItemName, String jsFile, int lineNumber){
+			this.smellyItemName = smellyItemName;
+			this.jsFile = jsFile;
+			this.lineNumber = lineNumber;
+		}
+		
+		public String getJsFile() {
+			return jsFile;
+		}
+		public void setJsFile(String jsFile) {
+			this.jsFile = jsFile;
+		}
+		public int getLineNumber() {
+			return lineNumber;
+		}
+		public void setLineNumber(int lineNumber) {
+			this.lineNumber = lineNumber;
+		}
+		public String getSmellyItemName() {
+			return smellyItemName;
+		}
+
+		public void setSmellyItemName(String smellyItemName) {
+			this.smellyItemName = smellyItemName;
+		}	
+	    
+		@Override
+	    public boolean equals(Object o) {
+	        if (this == o) return true;
+	        if (!(o instanceof SmellLocation)) return false;
+
+	        SmellLocation sl = (SmellLocation) o;
+
+	        if ((this.jsFile == null) ? (sl.jsFile != null) : !this.jsFile.equals(sl.jsFile)) {  
+	            return false;  
+	        }  
+	        if (this.lineNumber != sl.lineNumber) {  
+	            return false;  
+	        } 
+	        return true;
+	    }
+
+	    @Override
+	    public int hashCode() {
+	        return 1;
+	    }
+	    
+		
+	}
 
 	
 }

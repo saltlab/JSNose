@@ -8,6 +8,7 @@ public class JavaScriptObjectInfo {
 	private String prototype = "";
 	private int ASTdepth = 0;
 	private int lineNumber = 0;
+	private String jsFileName = "";
 	
 	//	usedInheritedPropetries = intersection of ownPropetries and inheritedPropetries 
 	//	usedInheritedPropetries= inheritedPropetries - ownPropetries
@@ -122,5 +123,13 @@ public class JavaScriptObjectInfo {
 
 	public void setLineNumber(int lineNumber) {
 		this.lineNumber = lineNumber;
+	}
+
+	public String getJsFileName() {
+		return jsFileName;
+	}
+
+	public void setJsFileName(String jsFileName) {
+		this.jsFileName = jsFileName;
 	}
 }

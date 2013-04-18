@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 
 import codesmells.JavaScriptObjectInfo;
 import codesmells.SmellDetector;
+import codesmells.SmellDetector.SmellLocation;
 
 import com.crawljax.browser.EmbeddedBrowser;
 import com.crawljax.core.configuration.CrawljaxConfigurationReader;
@@ -40,6 +41,13 @@ import com.crawljax.util.ElementResolver;
  */
 public class Crawler implements Runnable {
 
+
+	// TODO: Refactor this later:
+	private HashSet<String> lazyObjectsInfo = new HashSet<String>();	// keeping dynamic lazy objects
+
+	private HashSet<String> largeObjectsInfo = new HashSet<String>();	// keeping dynamic large objects
+
+	
 	/**
 	 * Added by Amin
 	 * CrawlStrategy: different crawling strategies set in the guidedCrawl()
@@ -370,7 +378,7 @@ public class Crawler implements Runnable {
 					}
 				}
 			}
-			System.out.println("********** GLOBALS **********");
+			System.out.println("********** RUNTIME GLOBALS DETECTION **********");
 			System.out.println("Total number of global variables: " + globalsVarList.size());
 			System.out.println("Globals are: " + globalsVarList);
 			
@@ -394,7 +402,8 @@ public class Crawler implements Runnable {
 			Object isObject =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"object\") return true;");
 			//System.out.println(isObject + " "+candidateJSObject);
 			if (isObject!=null && isObject.toString().equals("true")){
-				System.out.println(candidateJSObject + " is an object!");
+				//System.out.println(candidateJSObject + " is an object!");
+				
 				JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0,-1);
 				
 				//Adding properties and prototype to the newJSObj
@@ -418,11 +427,25 @@ public class Crawler implements Runnable {
 						" return inheritedPropertiesArray;");
 
 				
-				System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
-				System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
+				//System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
+				//System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
 				
 				ArrayList ownProperties = (ArrayList) ownPropertiesArray;
 				ArrayList inheritedProperties = (ArrayList) inheritedPropertiesArray;
+
+
+				if (ownProperties.size() < SmellDetector.MIN_OBJECT_PROPERTIES){
+					//System.out.println("********** RUNTIME LAZY DETECTION **********");
+					//System.out.println("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
+					lazyObjectsInfo.add("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
+				}
+				if (ownProperties.size() > SmellDetector.MAX_OBJECT_PROPERTIES){
+					//System.out.println("********** RUNTIME LARGE DETECTION **********");
+					//System.out.println("Large object: " + candidateJSObject + " with properties:" + ownProperties);
+					largeObjectsInfo.add("Large object: " + candidateJSObject + " with properties:" + ownProperties);
+				}
+
+
 				
 				for (int i=0;i<ownProperties.size();i++){
 					//System.out.println((String)ownProperties.get(i).toString());
@@ -797,6 +820,14 @@ public class Crawler implements Runnable {
 	 * done with {@link CrawlerExecutor#shutdown()}
 	 */
 	public void shutdown() {
+		System.out.println("DYNAMICALLY INFERRED LAZY OBJECTS");
+		for (String lazy: lazyObjectsInfo)
+			System.out.println(lazy);
+		
+		System.out.println("DYNAMICALLY INFERRED LARGE OBJECTS");
+		for (String large: largeObjectsInfo)
+			System.out.println(large);
+
 		controller.getBrowserPool().freeBrowser(this.getBrowser());
 	}
 

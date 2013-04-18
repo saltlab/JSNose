@@ -21,8 +21,8 @@ public class SmellDetector {
 	private static final int MAX_NUMBER_OF_SWITCHCASE = 3;		// switch
 	private static final int MAX_LENGTH_OF_SCOPE_CHAIN = 3;		// closure
 	private static final double BASE_CLASS_USAGE_RATIO = 0.33;	// refused bequest
-	private static final int MIN_OBJECT_PROPERTIES = 3;			// lazy object
-	private static final int MAX_OBJECT_PROPERTIES = 20;		// large object
+	public static final int MIN_OBJECT_PROPERTIES = 3;			// lazy object
+	public static final int MAX_OBJECT_PROPERTIES = 20;		// large object
 	private static final int MAX_OBJECT_LOC = 750;				// large object
 	
 
@@ -192,7 +192,7 @@ public class SmellDetector {
 	 */
 	public static void analyseObjecsList() {
 		
-		String protptype = "";
+		String prototype = "";
 		
 		//	usedInheritedPropetries = intersection of ownPropetries and inheritedPropetries 
 		//	usedInheritedPropetries = inheritedPropetries - ownPropetries
@@ -259,13 +259,13 @@ public class SmellDetector {
 					delegatedPropetries.add(used);
 				}
 
-			protptype = jso.getPrototype();
-			if (protptype!=""){
+			prototype = jso.getPrototype();
+			if (prototype!=""){
 
-				//System.out.println("protptype of :" + jso.getName() + " is: " + protptype);
+				System.out.println("prototype of :" + jso.getName() + " is: " + prototype);
 
 				for (JavaScriptObjectInfo proto : jsObjects)
-					if (proto.getName().equals(protptype)){
+					if (proto.getName().equals(prototype)){
 						
 						prototypeChain.add(proto);
 						
@@ -303,14 +303,26 @@ public class SmellDetector {
 
 
 						// detecting prototype-chain
-						protptype = proto.getPrototype();
-						while(protptype != ""){ 
-							for (JavaScriptObjectInfo o : jsObjects)
-								if (o.getName().equals(protptype)){
-									protptype = o.getPrototype();
-									prototypeChain.add(o);
+						boolean prototypeFound = false;
+						prototype = proto.getPrototype();
+						
+						if (!prototype.equals(proto.getName())){
+
+							System.out.println("prototype of :" + proto.getName() + " is: " + prototype);
+
+							while(prototype != ""){
+								prototypeFound = false;
+								for (JavaScriptObjectInfo o : jsObjects)
+									if (o.getName().equals(prototype)){
+										prototype = o.getPrototype();
+										prototypeChain.add(o);
+										prototypeFound = true;
+										break;
+									}
+								if (prototypeFound == false)
 									break;
-								}
+							}
+
 						}
 
 						//System.out.println("prototypeChain is: " + prototypeChain);

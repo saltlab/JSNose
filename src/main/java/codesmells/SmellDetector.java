@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import org.mozilla.javascript.Token;
 import org.mozilla.javascript.ast.*;
 
 /**
@@ -15,7 +16,7 @@ public class SmellDetector {
 
 	// JSNose parameters for smell detection
 	private static final int MAX_METHID_LENGTH = 50;			// function/method length
-	private static final int MAX_NUMBER_OF_PARAMETERS = 4;		// function parameter
+	private static final int MAX_NUMBER_OF_PARAMETERS = 5;		// function parameter
 	private static final int MAX_LENGTH_OF_PROTOTYPE = 3;		// prototype chain
 	private static final int MAX_LENGTH_OF_MESSAGE_CHAIN = 3;	// message chain
 	private static final int MAX_NUMBER_OF_SWITCHCASE = 3;		// switch
@@ -305,6 +306,7 @@ public class SmellDetector {
 						// detecting prototype-chain
 						boolean prototypeFound = false;
 						prototype = proto.getPrototype();
+						int chainLength = 0;
 						
 						if (!prototype.equals(proto.getName())){
 
@@ -321,6 +323,10 @@ public class SmellDetector {
 									}
 								if (prototypeFound == false)
 									break;
+								chainLength++;
+								if (chainLength == 5){
+									break;
+								}
 							}
 
 						}
@@ -367,6 +373,7 @@ public class SmellDetector {
 	public void analyseAstNode() {
 	
 		String ASTNodeName = ASTNode.shortName();
+		int type = ASTNode.getType();
 		int ASTDepth = ASTNode.depth();
 		
 		//System.out.println("node.shortName() : " + ASTNodeName);
@@ -392,6 +399,10 @@ public class SmellDetector {
 		}
 
 		
+		
+        
+		
+		
 		if (ASTNodeName.equals("Name"))
 			analyseNameNode();
 		else if (ASTNodeName.equals("VariableDeclaration"))
@@ -414,7 +425,7 @@ public class SmellDetector {
 			analyseCatchClause();
 		else if (ASTNodeName.equals("Block"))
 			analyseBlock();		
-		else if (ASTNodeName.equals("SwitchCase"))
+		else if (type == Token.SWITCH)
 			isSwitchSmell();
 		
 
@@ -915,9 +926,11 @@ public class SmellDetector {
 
 	private void isSwitchSmell() {
 
-		//System.out.println("switch found at line: " + (ASTNode.getLineno()+1));
-		SwitchCase sc = (SwitchCase)ASTNode;
-		if (sc.getStatements().size() > MAX_NUMBER_OF_SWITCHCASE){
+		SwitchStatement  s = (SwitchStatement)ASTNode;
+
+		System.out.println("switch found at line: " + (ASTNode.getLineno()+1) + " and has " + s.getCases().size() + " statements");
+
+		if (s.getCases().size() > MAX_NUMBER_OF_SWITCHCASE){
 			SmellLocation sl = new SmellLocation("switch", jsFileName,(ASTNode.getLineno()+1));
 			switchFound.add(sl);
 		}

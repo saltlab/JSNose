@@ -828,6 +828,10 @@ public class Crawler implements Runnable {
 		for (String large: largeObjectsInfo)
 			System.out.println(large);
 
+		// generate the last report
+		SmellDetector.generateReport();
+
+		
 		controller.getBrowserPool().freeBrowser(this.getBrowser());
 	}
 

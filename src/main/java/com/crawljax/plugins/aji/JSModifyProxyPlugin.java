@@ -178,6 +178,13 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	
 
 	private boolean shouldModify(String name) {
+		if (name.equals("http://127.0.0.1:8081/dragable-boxes/js/dragable-boxes.js") || 
+				name.equals("http://127.0.0.1:8081/dragable-boxes/js/ajax.js")){
+			LOGGER.info("Modifying response for " + name);
+			return true;
+		}
+		
+		
 		/* try all patterns and if 1 matches, return false */
 		for (String pattern : excludeFilenamePatterns) {
 			if (name.matches(pattern)) {

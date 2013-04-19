@@ -39,6 +39,8 @@ public class SmellDetector {
 	private boolean nextNameIsPrototype = false;	// this is to distinguish prototype of an object from other var/names
 	private boolean nextNameIsObject = false;		// this is to distinguish properties from an object such as for x in x.prototype = y;
 	
+	private boolean callBackFound = false;
+	
 	private int currentObjectNodeDepth = 0;	// This is node.depth() for the current object. A property would be added if its node.depth() is higher than currentObjectNodeDepth
 	private int currentObjectIndex = 0;		// This is the index of current object in jsObjects list (used to add properties/prototype)
 	private String currentIdentifier = "";	// this is to keep the latest identifier as it may be detected as an object following the pattern x=Object.create
@@ -66,6 +68,7 @@ public class SmellDetector {
 	private int lastFunctionDepth = 0;
 	private int scopeChainLength = 0;
 	private static HashSet<SmellLocation> longScopeChainFound = new HashSet<SmellLocation>();	// keeping line number of the inner function of a deep closure
+	private static HashSet<SmellLocation> nestedCallBackFound = new HashSet<SmellLocation>();	// keeping line number of the inner function of a deep closure
 
 	private static int inlineJavaScriptLines = 0;
 	private static HashSet<String> inlineJavaScriptScopeName = new HashSet<String>();	// keeping scope name (js file name) where inline JavaScript is detected
@@ -160,12 +163,16 @@ public class SmellDetector {
 		for (String sn: inlineJavaScriptScopeName)
 			System.out.println("Scope having the inline JavaScript: " + sn);
 		
-		// Long scope chain can be also used to detect callback. More detection process for callback is to dynamically check if the type of a parameter is function
 		System.out.println("********** CLOSURE SMELL **********");
 		reportSmell(longScopeChainFound);
 
 		System.out.println("********** LONG PROTOTYPE CHAIN **********");
 		reportSmell(longPrototypeChainObjLocation);
+
+		// More detection process for callback is to dynamically check if the type of a parameter is function
+		System.out.println("********** NESTED CALLBACK **********");
+		reportSmell(nestedCallBackFound);
+
 		
 		//System.out.println("********** OBJECT LIST **********");
 		//for (JavaScriptObjectInfo o: jsObjects)
@@ -682,6 +689,12 @@ public class SmellDetector {
 			if (scopeChainLength >= MAX_LENGTH_OF_SCOPE_CHAIN){
 				SmellLocation sl = new SmellLocation(fName, jsFileName,lineNumber);
 				longScopeChainFound.add(sl);
+
+				if (callBackFound){
+					//System.out.println("Callback found in nested functions at line : " + lineNumber + " of fileName: " + fName);
+					nestedCallBackFound.add(sl);
+				}
+				
 			}
 		}else
 			scopeChainLength = 1;
@@ -759,6 +772,19 @@ public class SmellDetector {
 		   dealing with x = Object.create() and x = new Object();
 		 */
 		FunctionCall fcall = (FunctionCall) ASTNode;
+		
+		// check for callback
+		boolean detected = false;
+		for (AstNode node : fcall.getArguments())
+			if (node.shortName().equals("FunctionNode")){
+				//System.out.println("callback found at line : " + ( ASTNode.getLineno()+1));
+				callBackFound = true;
+				detected = true;
+			}
+		if (detected == false)
+			callBackFound = false;
+		
+		
 		currentPrototype = getPrototypeOfObjectCreateStyle(fcall.debugPrint());
 		if (currentPrototype!=""){
 			//System.out.println("Prototype is :" + currentPrototype);

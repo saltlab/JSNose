@@ -406,7 +406,31 @@ public class SmellDetector {
 		}
 
 		
-		
+//		if (ASTNodeName.equals("Name")){
+//			//System.out.println(ASTNode.debugPrint());
+//
+//			for (Symbol s: ASTNode.getAstRoot().getSymbols()){
+//				int sType = s.getDeclType();
+//			    if (sType == Token.LP || sType == Token.VAR || sType == Token.LET || sType == Token.CONST){
+//			    	System.out.println("s.getName() : " + s.getName());
+//			    }
+//			}
+//			System.out.println();
+//		}
+//		else if (ASTNodeName.equals("FunctionNode")){
+//			FunctionNode f = (FunctionNode) ASTNode;
+//			for (Symbol s: f.getSymbols()){
+//				int sType = s.getDeclType();
+//			    if (sType == Token.LP || sType == Token.VAR || sType == Token.LET || sType == Token.CONST){
+//			    	System.out.println("s.getName() : " + s.getName());
+//			    }
+//			}
+//			
+//			System.out.println(f.getSymbolTable());
+//			System.out.println(f.getSymbols());
+//
+//		}else
+//			return;
         
 		
 		
@@ -610,9 +634,29 @@ public class SmellDetector {
 	 * Extracting object literals in javaScript
 	 */
 	public void analyseObjectLiteralNode() {
+
 		JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
 		newJSObj.setType("ObjectLiteral");
 		newJSObj.setJsFileName(jsFileName);
+
+		
+		ObjectLiteral o = ( ObjectLiteral) ASTNode;
+		//System.out.println("Found object literal: " + candidateObjectName);
+		List<ObjectProperty> prop =  o.getElements();
+		for (ObjectProperty op : prop){
+			if (op.getLeft().shortName().equals("Name")){
+				//System.out.println("op.getString(): " + ((Name)(op.getLeft())).getIdentifier()  );
+				newJSObj.addOwnProperty(((Name)(op.getLeft())).getIdentifier());
+			}
+			else if (op.getLeft().shortName().equals("StringLiteral")){
+				//System.out.println("op.getString(): " + ((StringLiteral)(op.getLeft())).getValue()  );
+				newJSObj.addOwnProperty(((StringLiteral)(op.getLeft())).getValue());
+			}
+			else{
+				System.out.println("UNKNOWN!!");
+			}
+		}
+				
 		jsObjects.add(newJSObj);
 		currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
 		currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth

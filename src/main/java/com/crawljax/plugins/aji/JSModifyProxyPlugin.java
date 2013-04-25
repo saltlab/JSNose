@@ -29,8 +29,10 @@ import org.mozilla.javascript.CompilerEnvirons;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Parser;
 import org.mozilla.javascript.RhinoException;
+import org.mozilla.javascript.Token;
 import org.mozilla.javascript.ast.AstRoot;
 import org.mozilla.javascript.ast.ScriptNode;
+import org.mozilla.javascript.ast.Symbol;
 import org.owasp.webscarab.httpclient.HTTPClient;
 import org.owasp.webscarab.model.Request;
 import org.owasp.webscarab.model.Response;
@@ -284,6 +286,15 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 
 			//System.out.println("printing ast " + ast.toSource());
 
+			System.out.println("PRINTING AST ROOT");
+			for (Symbol s: ast.getSymbols()){
+				int sType = s.getDeclType();
+			    if (sType == Token.LP || sType == Token.VAR || sType == Token.LET || sType == Token.CONST){
+			    	System.out.println("s.getName() : " + s.getName());
+			    }
+			}
+
+			
 			/* recurse through AST and statically analayze the code for smells*/
 			ast.visit(modifier);
 

@@ -22,6 +22,7 @@ package com.crawljax.plugins.aji;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -74,6 +75,10 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	private static List<String> modifiedJS;
 	
 
+	// Amin: keep track of event handlers
+	private HashSet<Node> eventList = new HashSet<Node>();
+	
+	
 	private EmbeddedBrowser browser;
 
 	
@@ -226,7 +231,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			 */
 			if (scopename.contains("script")){
 				//System.out.println("scopename : " + getJSName(scopename));
-				SmellDetector.analyseCoupling(jsName, input);
+				SmellDetector.analyseCoupling(jsName, input, eventList);
 			}
 
 			AstRoot ast = null;
@@ -490,6 +495,21 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			}
 			try {
 				Document dom = Helper.getDocument(new String(response.getContent()));
+				
+				
+				/* finding event handlers */
+				// checking a, div, span, img, input, td
+				String[] tags = { "a", "div", "span", "img", "input", "td"};  
+				
+				NodeList eventable = null;
+				for (int i=0; i<tags.length; i++){
+					eventable = dom.getElementsByTagName(tags[i]);
+					checkEventHandler(eventable);
+				}
+				
+				
+				
+				
 				/* find script nodes in the html */
 				NodeList nodes = dom.getElementsByTagName("script");
 
@@ -529,6 +549,28 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 		}
 		/* return the response to the webbrowser */
 		return response;
+	}
+
+	// Amin
+	private void checkEventHandler(NodeList eventable) {
+
+		String[] attributes = { "onclick",	"ondblclick", "onmouseover", "onmouseup", "onmousedown", "onmouseout", "onkeydown", "onkeypress" };  
+
+		Node foundAttribute = null;
+		for (int i = 0; i < attributes.length; i++) {
+			for (int j = 0; j < eventable.getLength(); j++) {
+				foundAttribute = eventable.item(j).getAttributes().getNamedItem(attributes[i]);
+				if ((foundAttribute != null && foundAttribute.getTextContent() != null)){
+					//String content = eventable.item(j).getTextContent();
+					//System.out.println("Found " + attributes[i]);
+					eventList.add(eventable.item(j));
+				}
+
+
+			}				
+		}
+
+
 	}
 
 	/**

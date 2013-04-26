@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.mozilla.javascript.Token;
 import org.mozilla.javascript.ast.*;
+import org.w3c.dom.Node;
 
 /**
  * Main JSNose smell detection method
@@ -72,6 +73,8 @@ public class SmellDetector {
 
 	private static int inlineJavaScriptLines = 0;
 	private static HashSet<String> inlineJavaScriptScopeName = new HashSet<String>();	// keeping scope name (js file name) where inline JavaScript is detected
+	private static int NumberOfInTagJS = 0; 
+		
 	
 	private static HashSet<String> globals = new HashSet<String>();	// keeping global variables
 	
@@ -159,9 +162,12 @@ public class SmellDetector {
 		reportSmell(switchFound);
 		
 		System.out.println("********** COUPLING JS/HTML **********");
-		System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
-		for (String sn: inlineJavaScriptScopeName)
-			System.out.println("Scope having the inline JavaScript: " + sn);
+		
+		System.out.println("Total number of JavaScript in HTML tags: " + NumberOfInTagJS);
+		
+		//System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
+		//for (String sn: inlineJavaScriptScopeName)
+		//	System.out.println("Scope having the inline JavaScript: " + sn);
 		
 		System.out.println("********** CLOSURE SMELL **********");
 		reportSmell(longScopeChainFound);
@@ -1015,11 +1021,15 @@ public class SmellDetector {
 	 * TODO: distinguish between server-side generated codes and original inline codes
 	 * 
 	 */
-	public static void analyseCoupling(String scopeName, String code) {
+	public static void analyseCoupling(String scopeName, String code, HashSet<Node> eventList) {
 		// counting lines of inline javascript 
 		String[] lines = code.split("\r\n|\r|\n");
 		//System.out.println("There are " + lines.length + " lines of JavaScript code inside your HTML");
 		//System.out.println("code is: " + code);
+		
+		//System.out.println("eventList: " + eventList);
+		NumberOfInTagJS = eventList.size(); 
+		
 		if (!inlineJavaScriptScopeName.contains(scopeName)){
 			inlineJavaScriptScopeName.add(scopeName);
 			inlineJavaScriptLines += lines.length;

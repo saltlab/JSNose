@@ -497,7 +497,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 				Document dom = Helper.getDocument(new String(response.getContent()));
 				
 				
-				/* finding event handlers */
+				/* Amin: finding event handlers */
 				// checking a, div, span, img, input, td
 				String[] tags = { "a", "div", "span", "img", "input", "td"};  
 				

@@ -74,6 +74,7 @@ public class SmellDetector {
 	private static int inlineJavaScriptLines = 0;
 	private static HashSet<String> inlineJavaScriptScopeName = new HashSet<String>();	// keeping scope name (js file name) where inline JavaScript is detected
 	private static int NumberOfInTagJS = 0; 
+	private static HashSet<SmellLocation> CSSinJS = new HashSet<SmellLocation>();	// keeping line number where CSS is used in JS
 		
 	
 	private static HashSet<String> globals = new HashSet<String>();	// keeping global variables
@@ -164,6 +165,10 @@ public class SmellDetector {
 		System.out.println("********** COUPLING JS/HTML **********");
 		
 		System.out.println("Total number of JavaScript in HTML tags: " + NumberOfInTagJS);
+		//System.out.println("Total number of CSS in JavaScript: " + NumberOfCSSinJS);
+		reportSmell(CSSinJS);
+		
+		
 		
 		//System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
 		//for (String sn: inlineJavaScriptScopeName)
@@ -222,6 +227,9 @@ public class SmellDetector {
 		SmellLocation sl;
 		
 		for (JavaScriptObjectInfo jso : jsObjects){
+			
+			System.out.println(jso);
+			
 			usedInheritedPropetries.clear();
 			notUsedInheritedPropetries.clear();
 			delegatedPropetries.clear();
@@ -543,57 +551,66 @@ public class SmellDetector {
 				 * check if it is "Object.prototype" and not "x.prototype" = y
 				 */
 				//System.out.println("should find a prototype for current object: " + jsObjects.get(currentObjectIndex).getName());
-				
+
 				nextNameIsProperty = false;
 
 			}else{	
-				/*
+
+				// checking css in javascript 
+				if (((Name)ASTNode).getIdentifier().equals("style")){
+					SmellLocation sl = new SmellLocation("CSS in JavaScript", jsFileName,(ASTNode.getLineno()+1));
+					System.out.println("CSSinJS : at line " + (ASTNode.getLineno()+1) + " of file: " + jsFileName);
+					CSSinJS.add(sl);
+				}else{
+
+					/*
     			  Adding a property to the current object
-				 */
-				if (!((Name)ASTNode).getIdentifier().equals(jsObjects.get(currentObjectIndex).getName())){ // ignoring to add the function name as a property of the object
-					//System.out.println("property found: " + ((Name)ASTNode).getIdentifier() + " for object: " + jsObjects.get(currentObjectIndex).getName());
-					
-					if (LHS==true){
-						//System.out.println("THIS IS AN OWN PROPERTY!");
-						jsObjects.get(currentObjectIndex).addOwnProperty(((Name)ASTNode).getIdentifier());
-						jsObjects.get(currentObjectIndex).addUsedProperty(((Name)ASTNode).getIdentifier());
-					}else{
-						//System.out.println("THIS IS A USED PROPERTY!");
-						jsObjects.get(currentObjectIndex).addUsedProperty(((Name)ASTNode).getIdentifier());
-					}
-					
-					
-					//System.out.println("lastMessageChain is :" + lastMessageChain);
-					if (lastMessageChain==1){ // normal case (no nested object.object.object...)
-						nextNameIsProperty = true;
-						ignoreDepthChange = false;
-						//System.out.println("ignoreDepthChange = false");
-					}
-					else{ // dealing with a.b.c = ... pattern
+					 */
+					if (!((Name)ASTNode).getIdentifier().equals(jsObjects.get(currentObjectIndex).getName())){ // ignoring to add the function name as a property of the object
+						//System.out.println("property found: " + ((Name)ASTNode).getIdentifier() + " for object: " + jsObjects.get(currentObjectIndex).getName());
 
-						//System.out.println("lastMessageChain is : " + lastMessageChain + " so " + ((Name)ASTNode).getIdentifier() + " should be a new object");
-
-						candidateObjectName = ((Name)ASTNode).getIdentifier();
-						JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
-						newJSObj.setJsFileName(jsFileName);
-						if (!objectExists(newJSObj)){		// add the new object if does not already exist
-							jsObjects.add(newJSObj);
-							currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
-							currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth
-							//System.out.println("A new object is used: " + candidateObjectName);
+						if (LHS==true){
+							//System.out.println("THIS IS AN OWN PROPERTY!");
+							jsObjects.get(currentObjectIndex).addOwnProperty(((Name)ASTNode).getIdentifier());
+							jsObjects.get(currentObjectIndex).addUsedProperty(((Name)ASTNode).getIdentifier());
+						}else{
+							//System.out.println("THIS IS A USED PROPERTY!");
+							jsObjects.get(currentObjectIndex).addUsedProperty(((Name)ASTNode).getIdentifier());
 						}
-						//System.out.println("object in use: " + candidateObjectName);
-						nextNameIsObject = false;
-						//System.out.println("analyseNameNode(): nextNameIsProperty");
-						nextNameIsProperty = true;  // to read next name as the property of this object such as x.propX. propX may also be prototype and should be avoided to add as property
 
-						ignoreDepthChange = true;
-						//System.out.println("ignoreDepthChange = true");
 
-						lastMessageChain--;
-						
 						//System.out.println("lastMessageChain is :" + lastMessageChain);
-						
+						if (lastMessageChain==1){ // normal case (no nested object.object.object...)
+							nextNameIsProperty = true;
+							ignoreDepthChange = false;
+							//System.out.println("ignoreDepthChange = false");
+						}
+						else{ // dealing with a.b.c = ... pattern
+
+							//System.out.println("lastMessageChain is : " + lastMessageChain + " so " + ((Name)ASTNode).getIdentifier() + " should be a new object");
+
+							candidateObjectName = ((Name)ASTNode).getIdentifier();
+							JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateObjectName, ASTNode.depth(), ASTNode.getLineno()+1);
+							newJSObj.setJsFileName(jsFileName);
+							if (!objectExists(newJSObj)){		// add the new object if does not already exist
+								jsObjects.add(newJSObj);
+								currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
+								currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth
+								//System.out.println("A new object is used: " + candidateObjectName);
+							}
+							//System.out.println("object in use: " + candidateObjectName);
+							nextNameIsObject = false;
+							//System.out.println("analyseNameNode(): nextNameIsProperty");
+							nextNameIsProperty = true;  // to read next name as the property of this object such as x.propX. propX may also be prototype and should be avoided to add as property
+
+							ignoreDepthChange = true;
+							//System.out.println("ignoreDepthChange = true");
+
+							lastMessageChain--;
+
+							//System.out.println("lastMessageChain is :" + lastMessageChain);
+
+						}
 					}
 				}
 			}
@@ -939,6 +956,11 @@ public class SmellDetector {
 		}
 		return prototype;
 	}
+	
+	
+	// find CSSinJS style 				
+	//SmellLocation sl = new SmellLocation(fName, jsFileName,lineNumber);
+	// longScopeChainFound.add(sl);
 	
 	
 	// just some parsing to get the identifier in front of the NAME

@@ -282,6 +282,8 @@ public abstract class JSASTModifier implements NodeVisitor {
 		smellDetector.analyseAstNode();		
 		
 		
+		visit2(node);
+		
 		//TreeNode<String> n = new TreeNode<String>();
 		//n.setData(node.shortName());
 		//tree.setRootElement(n);

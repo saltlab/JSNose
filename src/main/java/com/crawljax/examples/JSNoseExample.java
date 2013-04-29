@@ -26,9 +26,9 @@ public final class JSNoseExample {
 
 	//Amin settings for ICSM paper
 	private static boolean doDiverseCrawling = true;	// default should be false
-	private static boolean doEfficientCrawling = true;	// default should be false
+	private static boolean doEfficientCrawling = false;	// default should be false
 	private static boolean doRandomEventExec = false;   // set it true for randomizing event execution
-	private static boolean doClickOnce = false;         // true: click only once on each clickable, false: multiple click
+	private static boolean doClickOnce = true;         // true: click only once on each clickable, false: multiple click
 	
 	//Final selected experimental objects
 	private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery

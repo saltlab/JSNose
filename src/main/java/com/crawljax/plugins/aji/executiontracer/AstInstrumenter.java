@@ -59,9 +59,9 @@ public class AstInstrumenter extends JSASTModifier {
 	 */
 	private AstNode jsLineExectutionCounter() {
 
-		String code = "var " + jsName + "_counter = new Array(); " +
+		String code = "var " + jsName + "_exec_counter = new Array(); " +
 				"for (var i=0;i<" + instrumentedLinesCounter + ";i++)" +
-				"if("+jsName + "_counter[i]== undefined || "+jsName + "_counter[i]== null) "+jsName + "_counter[i]=0;";
+				"if("+jsName + "_exec_counter[i]== undefined || "+jsName + "_exec_counter[i]== null) "+jsName + "_exec_counter[i]=0;";
 		
 		// Amin: instrumentedLinesCounter resets to 0 for the next codes
 		instrumentedLinesCounter = 0;
@@ -75,7 +75,7 @@ public class AstInstrumenter extends JSASTModifier {
 		String name = getFunctionName(function);
 
 		// Amin: Adds instrumentation code
-		String code = jsName + "_counter[" + Integer.toString(instrumentedLinesCounter) + "]++;";
+		String code = jsName + "_exec_counter[" + Integer.toString(instrumentedLinesCounter) + "]++;";
 		instrumentedLinesCounter++;
 		
 		return parse(code);
@@ -85,7 +85,7 @@ public class AstInstrumenter extends JSASTModifier {
 	protected AstNode createNode(AstRoot root, String postfix, int lineNo, int rootCount) {
 
 		// Amin: Adds instrumentation code
-		 String code = jsName + "_counter[" + Integer.toString(instrumentedLinesCounter) + "]++;";
+		 String code = jsName + "_exec_counter[" + Integer.toString(instrumentedLinesCounter) + "]++;";
 		instrumentedLinesCounter++;
 
 		return parse(code);

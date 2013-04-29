@@ -92,8 +92,12 @@ public class SmellDetector {
 	
 	private static HashSet<SmellLocation> longPrototypeChainObjLocation = new HashSet<SmellLocation>();	// keeping objects with long prototype chain
 	
+	// list of objects to ignore in reporting large/lazy object and refused bequest
+	private static ArrayList<String> objectsToIgnore = new ArrayList<String>();	
+	
+	
 	/**
-	 * Amin: this list is for keeping name of candidate javascript objects found in the code
+	 * This list is for keeping name of candidate javascript objects found in the code
 	 * they are called candidate since some my not be actual objects
 	 */
 	private static List<String> candidateJSObjectList = new ArrayList<String>();
@@ -106,6 +110,13 @@ public class SmellDetector {
 	
 	public SmellDetector() {
 		ASTNode = null;
+		// ignore these objects when reporting object-based smells
+		objectsToIgnore.add("window");
+		objectsToIgnore.add("document");
+		objectsToIgnore.add("top");
+		objectsToIgnore.add("navigator");
+		objectsToIgnore.add("Math");
+
 	}
 
 	public void SetASTNode(AstNode node) {
@@ -165,10 +176,8 @@ public class SmellDetector {
 		System.out.println("********** COUPLING JS/HTML **********");
 		
 		System.out.println("Total number of JavaScript in HTML tags: " + NumberOfInTagJS);
-		//System.out.println("Total number of CSS in JavaScript: " + NumberOfCSSinJS);
+		System.out.println("Occurance of CSS in JavaScript");
 		reportSmell(CSSinJS);
-		
-		
 		
 		//System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
 		//for (String sn: inlineJavaScriptScopeName)
@@ -228,7 +237,7 @@ public class SmellDetector {
 		
 		for (JavaScriptObjectInfo jso : jsObjects){
 			
-			System.out.println(jso);
+			//System.out.println(jso);
 			
 			usedInheritedPropetries.clear();
 			notUsedInheritedPropetries.clear();
@@ -239,37 +248,39 @@ public class SmellDetector {
 			//System.out.println("ownPropetries of :" + jso.getName() + " is: " + ownPropetries);
 			
 			
-			/**
-			 * Detecting lazy object
-			 */
-			if (ownPropetries.size() < MIN_OBJECT_PROPERTIES){
-				sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
-				System.out.println(jso.getName() + " is a lazy object because ownPropetries is " + ownPropetries);
-				lazyObjectsLocation.add(sl);
-			}
-			
-			
-			/**
-			 * Detecting large object
-			 */
-			int LOC = 0; // object methods lines of code
-			// counting total LOC of its methods
-			for (int i=0; i<ownPropetries.size(); i++){
-				for (int j=0; j<jsFunctions.size(); j++){
-					if (ownPropetries.get(i).equals(jsFunctions.get(j).getName()))
-						LOC += jsFunctions.get(j).getLinesOfCode();
+			if (!objectsToIgnore.contains(jso.getName())){
+				/**
+				 * Detecting lazy object
+				 */
+
+				if (ownPropetries.size() < MIN_OBJECT_PROPERTIES){
+					sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
+					//System.out.println(jso.getName() + " is a lazy object because ownPropetries is " + ownPropetries);
+					lazyObjectsLocation.add(sl);
 				}
-			}
-			if (LOC >= MAX_OBJECT_LOC || ownPropetries.size() > MAX_OBJECT_PROPERTIES){
-				sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
-				
-				System.out.println(jso.getName() + " is a large object because LOC is " + LOC + " and ownPropetries.size() is " + ownPropetries.size());
-				largeObjectsLocation.add(sl);
-			}
-				
 
 
-			
+				/**
+				 * Detecting large object
+				 */
+				int LOC = 0; // object methods lines of code
+				// counting total LOC of its methods
+				for (int i=0; i<ownPropetries.size(); i++){
+					for (int j=0; j<jsFunctions.size(); j++){
+						if (ownPropetries.get(i).equals(jsFunctions.get(j).getName()))
+							LOC += jsFunctions.get(j).getLinesOfCode();
+					}
+				}
+				if (LOC >= MAX_OBJECT_LOC || ownPropetries.size() > MAX_OBJECT_PROPERTIES){
+					sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
+
+					//System.out.println(jso.getName() + " is a large object because LOC is " + LOC + " and ownPropetries.size() is " + ownPropetries.size());
+					largeObjectsLocation.add(sl);
+				}
+
+			}
+
+
 			
 			usedPropetries = jso.getUsedPropetries();
 			//System.out.println("usedPropetries of :" + jso.getName() + " is: " + usedPropetries);
@@ -284,7 +295,7 @@ public class SmellDetector {
 			prototype = jso.getPrototype();
 			if (prototype!=""){
 
-				System.out.println("prototype of :" + jso.getName() + " is: " + prototype);
+				//System.out.println("prototype of :" + jso.getName() + " is: " + prototype);
 
 				for (JavaScriptObjectInfo proto : jsObjects)
 					if (proto.getName().equals(prototype)){
@@ -316,12 +327,13 @@ public class SmellDetector {
 						/**
 						 * Detecting refused bequest
 						 */
-						if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < BASE_CLASS_USAGE_RATIO){
-							//System.out.println("Detected refused bequest for object: " + jso.getName());
-							sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
-							refusedBequestObjLocation.add(sl);
+						if (!objectsToIgnore.contains(jso.getName())){
+							if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < BASE_CLASS_USAGE_RATIO){
+								//System.out.println("Detected refused bequest for object: " + jso.getName());
+								sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
+								refusedBequestObjLocation.add(sl);
+							}
 						}
-
 
 
 						// detecting prototype-chain
@@ -331,7 +343,7 @@ public class SmellDetector {
 						
 						if (!prototype.equals(proto.getName())){
 
-							System.out.println("prototype of :" + proto.getName() + " is: " + prototype);
+							//System.out.println("prototype of :" + proto.getName() + " is: " + prototype);
 
 							while(prototype != ""){
 								prototypeFound = false;

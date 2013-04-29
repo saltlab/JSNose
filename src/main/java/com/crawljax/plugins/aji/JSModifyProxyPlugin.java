@@ -291,13 +291,13 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 
 			//System.out.println("printing ast " + ast.toSource());
 
-			System.out.println("PRINTING AST ROOT");
-			for (Symbol s: ast.getSymbols()){
-				int sType = s.getDeclType();
-			    if (sType == Token.LP || sType == Token.VAR || sType == Token.LET || sType == Token.CONST){
-			    	System.out.println("s.getName() : " + s.getName());
-			    }
-			}
+//			System.out.println("PRINTING AST ROOT");
+//			for (Symbol s: ast.getSymbols()){
+//				int sType = s.getDeclType();
+//			    if (sType == Token.LP || sType == Token.VAR || sType == Token.LET || sType == Token.CONST){
+//			    	System.out.println("s.getName() : " + s.getName());
+//			    }
+//			}
 
 			
 			/* recurse through AST and statically analayze the code for smells*/

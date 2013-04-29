@@ -352,7 +352,7 @@ public class Crawler implements Runnable {
 		 */
 		
 		// getCoverage should be set true for dead unused/code detection
-		boolean getCoverage = false;
+		boolean getCoverage = true;
 	
 		/**
 		 * Fetching list of globals dynamically at runtime
@@ -370,7 +370,9 @@ public class Crawler implements Runnable {
 			HashSet<String> globalsVarList = new HashSet<String>();	// keeping global variables
 			Object acceptable = null;
 			for (int i=0;i<globalVars.size();i++){
-				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")  && !globalVars.get(i).equals("top")  && !globalVars.get(i).equals("navigator")){
+				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")  
+						&& !globalVars.get(i).equals("top")  && !globalVars.get(i).equals("navigator")
+						&& !((String)globalVars.get(i)).contains("exec_counter")){
 					acceptable =  this.browser.executeJavaScript("if (typeof " + globalVars.get(i) + " !== 'function') return true; else return false;");
 					if (acceptable.toString().equals("true")){
 						globalsVarList.add(globalVars.get(i).toString());
@@ -486,7 +488,7 @@ public class Crawler implements Runnable {
 				}
 				*/
 
-				System.out.println();
+				//System.out.println();
 
 			}
 			}catch (Exception e) {
@@ -509,7 +511,7 @@ public class Crawler implements Runnable {
 				for (String modifiedJS : JSModifyProxyPlugin.getModifiedJSList()){
 					//System.out.println("MODIFIED CODES ARE: " + modifiedJS);
 					try{
-						Object counter =  this.browser.executeJavaScript("return " + modifiedJS + "_counter;");
+						Object counter =  this.browser.executeJavaScript("return " + modifiedJS + "_exec_counter;");
 						this.controller.setCountList(modifiedJS, counter);
 					}catch (Exception e) {
 						LOGGER.info("Could not execute script");

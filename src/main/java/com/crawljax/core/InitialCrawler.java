@@ -102,7 +102,7 @@ public class InitialCrawler extends Crawler {
 			for (String modifiedJS : JSModifyProxyPlugin.getModifiedJSList()){
 				// LOGGER.info("** MODIFIEDS ARE: " + modifiedJS);
 				try{
-					Object counter =  this.browser.executeJavaScript("return " + modifiedJS + "_counter;");
+					Object counter =  this.browser.executeJavaScript("return " + modifiedJS + "_exec_counter;");
 					ArrayList countList = (ArrayList) counter;
 
 					this.controller.setCountList(modifiedJS, counter);

@@ -42,11 +42,9 @@ import com.crawljax.util.ElementResolver;
 public class Crawler implements Runnable {
 
 
-	// TODO: Refactor this later:
-	private HashSet<String> lazyObjectsInfo = new HashSet<String>();	// keeping dynamic lazy objects
-
-	private HashSet<String> largeObjectsInfo = new HashSet<String>();	// keeping dynamic large objects
-
+	private static HashSet<JavaScriptObjectInfo> largeObjects = new HashSet<JavaScriptObjectInfo>();	// keeping dynamic large objects	
+	private static HashSet<JavaScriptObjectInfo> lazyObjects = new HashSet<JavaScriptObjectInfo>();		// keeping dynamic large objects
+	
 	
 	/**
 	 * Added by Amin
@@ -372,7 +370,10 @@ public class Crawler implements Runnable {
 			for (int i=0;i<globalVars.size();i++){
 				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")  
 						&& !globalVars.get(i).equals("top")  && !globalVars.get(i).equals("navigator")
+						&& !globalVars.get(i).equals("location")  && !globalVars.get(i).equals("InstallTrigger")
+						&& !globalVars.get(i).equals("fxdriver_id")  && !globalVars.get(i).equals("__fxdriver_unwrapped")
 						&& !((String)globalVars.get(i)).contains("exec_counter")){
+
 					acceptable =  this.browser.executeJavaScript("if (typeof " + globalVars.get(i) + " !== 'function') return true; else return false;");
 					if (acceptable.toString().equals("true")){
 						globalsVarList.add(globalVars.get(i).toString());
@@ -436,19 +437,6 @@ public class Crawler implements Runnable {
 				ArrayList inheritedProperties = (ArrayList) inheritedPropertiesArray;
 
 
-				if (ownProperties.size() < SmellDetector.MIN_OBJECT_PROPERTIES){
-					//System.out.println("********** RUNTIME LAZY DETECTION **********");
-					//System.out.println("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
-					lazyObjectsInfo.add("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
-				}
-				if (ownProperties.size() > SmellDetector.MAX_OBJECT_PROPERTIES){
-					//System.out.println("********** RUNTIME LARGE DETECTION **********");
-					//System.out.println("Large object: " + candidateJSObject + " with properties:" + ownProperties);
-					largeObjectsInfo.add("Large object: " + candidateJSObject + " with properties:" + ownProperties);
-				}
-
-
-				
 				for (int i=0;i<ownProperties.size();i++){
 					//System.out.println((String)ownProperties.get(i).toString());
 					newJSObj.addOwnProperty((String)ownProperties.get(i).toString());
@@ -461,6 +449,32 @@ public class Crawler implements Runnable {
 
 				
 				SmellDetector.addDynamicObject(newJSObj);
+				
+				
+				if (!candidateJSObject.equals("window") && !candidateJSObject.equals("document")  
+						&& !candidateJSObject.equals("top")  && !candidateJSObject.equals("navigator")
+						&& !candidateJSObject.equals("location")  && !candidateJSObject.equals("InstallTrigger")
+						&& !candidateJSObject.equals("fxdriver_id")  && !candidateJSObject.equals("__fxdriver_unwrapped")
+						&& !candidateJSObject.contains("exec_counter")){
+
+		
+					if (ownProperties.size() < SmellDetector.MIN_OBJECT_PROPERTIES){
+						//System.out.println("********** RUNTIME LAZY DETECTION **********");
+						//System.out.println("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
+						if (!lazyObjects.contains(newJSObj))		// add the new object if does not already exist
+							lazyObjects.add(newJSObj);
+
+					}
+					if (ownProperties.size() > SmellDetector.MAX_OBJECT_PROPERTIES){
+						//System.out.println("********** RUNTIME LARGE DETECTION **********");
+						//System.out.println("Large object: " + candidateJSObject + " with properties:" + ownProperties);
+						if (!largeObjects.contains(newJSObj))		// add the new object if does not already exist
+							largeObjects.add(newJSObj);
+					}
+
+				}
+
+
 				
 				//Adding prototype chain to the newJSObj
 				/*Object prototype;
@@ -822,14 +836,16 @@ public class Crawler implements Runnable {
 	 * done with {@link CrawlerExecutor#shutdown()}
 	 */
 	public void shutdown() {
-		System.out.println("DYNAMICALLY INFERRED LAZY OBJECTS");
-		for (String lazy: lazyObjectsInfo)
-			System.out.println(lazy);
+		//System.out.println("DYNAMICALLY INFERRED LAZY OBJECTS");
+		//for (JavaScriptObjectInfo lazy: lazyObjects)
+		//	System.out.println(lazy.getName());
 		
-		System.out.println("DYNAMICALLY INFERRED LARGE OBJECTS");
-		for (String large: largeObjectsInfo)
-			System.out.println(large);
+		//System.out.println("DYNAMICALLY INFERRED LARGE OBJECTS");
+		//for (JavaScriptObjectInfo large: largeObjects)
+		//	System.out.println(large.getName());
 
+		SmellDetector.filterObjects(largeObjects, lazyObjects);
+		
 		// generate the last report
 		SmellDetector.generateReport();
 

@@ -77,6 +77,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 
 	// Amin: keep track of event handlers
 	private HashSet<Node> eventList = new HashSet<Node>();
+	private boolean foundTagsWithJS = false;
 	
 	
 	private EmbeddedBrowser browser;
@@ -185,11 +186,11 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	
 
 	private boolean shouldModify(String name) {
-		if (name.equals("http://127.0.0.1:8081/dragable-boxes/js/dragable-boxes.js") || 
-				name.equals("http://127.0.0.1:8081/dragable-boxes/js/ajax.js")){
-			LOGGER.info("Modifying response for " + name);
-			return true;
-		}
+//		if (name.equals("http://127.0.0.1:8081/dragable-boxes/js/dragable-boxes.js") || 
+//				name.equals("http://127.0.0.1:8081/dragable-boxes/js/ajax.js")){
+//			LOGGER.info("Modifying response for " + name);
+//			return true;
+//		}
 		
 		
 		/* try all patterns and if 1 matches, return false */
@@ -226,14 +227,19 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			
 			SmellDetector.setJSName(jsName);
 
+			
 			/**
 			 * Analysing inline javascript smell
 			 */
 			if (scopename.contains("script")){
 				//System.out.println("scopename : " + getJSName(scopename));
 				SmellDetector.analyseCoupling(jsName, input, eventList);
+			}else if (foundTagsWithJS){
+				SmellDetector.analyseCoupling("main_html", "", eventList);
 			}
 
+			
+			
 			AstRoot ast = null;
 
 			/* initialize JavaScript context */
@@ -499,7 +505,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 				
 				/* Amin: finding event handlers */
 				// checking a, div, span, img, input, td
-				String[] tags = { "a", "div", "span", "img", "input", "td"};  
+				String[] tags = { "a", "div", "span", "img", "input", "td", "button"};  
 				
 				NodeList eventable = null;
 				for (int i=0; i<tags.length; i++){
@@ -509,10 +515,9 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 				
 				
 				
-				
 				/* find script nodes in the html */
 				NodeList nodes = dom.getElementsByTagName("script");
-
+				
 				for (int i = 0; i < nodes.getLength(); i++) {
 					Node nType = nodes.item(i).getAttributes().getNamedItem("type");
 					/* instrument if this is a JavaScript node */
@@ -537,7 +542,15 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 						}
 
 					}
+					
+					/* also consider javascript in tags if there is no <script> */
+					if (eventList.size() > 0)
+						foundTagsWithJS = true;
+					
+					
 				}
+				
+				
 				/* only modify content when we did modify anything */
 				if (nodes.getLength() > 0) {
 					/* set the new content */

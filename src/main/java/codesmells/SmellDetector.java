@@ -116,6 +116,10 @@ public class SmellDetector {
 		objectsToIgnore.add("top");
 		objectsToIgnore.add("navigator");
 		objectsToIgnore.add("Math");
+		objectsToIgnore.add("location");
+		objectsToIgnore.add("InstallTrigger");
+		objectsToIgnore.add("fxdriver_id");
+		objectsToIgnore.add("__fxdriver_unwrapped");
 
 	}
 
@@ -1171,7 +1175,38 @@ public class SmellDetector {
 		
 	}
 
+
+	// filtering large/lazy objects based on dynamically inferred object list
+	public static void filterObjects(HashSet<JavaScriptObjectInfo> largeObjects,
+			HashSet<JavaScriptObjectInfo> lazyObjects) {
+
+		ArrayList<SmellLocation> itemsToRemove = new ArrayList<SmellLocation>();		
+		
+		for (JavaScriptObjectInfo largeObj:largeObjects)
+			for (SmellLocation l:lazyObjectsLocation)
+				if (l.getSmellyItemName().equals(largeObj.getName()))
+					itemsToRemove.add(l);
 	
+		for (SmellLocation removeSmell :itemsToRemove){
+			//System.out.println("object " + removeSmell.getSmellyItemName() + " detected as dynamic large, removed from lazy list");
+			lazyObjectsLocation.remove(removeSmell);
+		}
+		
+		
+		itemsToRemove.clear();
+		for (JavaScriptObjectInfo lazyObj:lazyObjects)
+			for (SmellLocation l:largeObjectsLocation)
+				if (l.getSmellyItemName().equals(lazyObj.getName()))
+					itemsToRemove.add(l);
+	
+		for (SmellLocation removeSmell :itemsToRemove){
+			//System.out.println("object " + removeSmell.getSmellyItemName() + " detected as dynamic lazy, removed from large list");
+			largeObjectsLocation.remove(removeSmell);
+		}
+
+	}
+
+
 }
 
 

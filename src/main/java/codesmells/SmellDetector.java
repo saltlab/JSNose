@@ -24,7 +24,7 @@ public class SmellDetector {
 	private static final int MAX_LENGTH_OF_SCOPE_CHAIN = 3;		// closure
 	private static final double BASE_CLASS_USAGE_RATIO = 0.33;	// refused bequest
 	public static final int MIN_OBJECT_PROPERTIES = 3;			// lazy object
-	public static final int MAX_OBJECT_PROPERTIES = 20;		// large object
+	public static final int MAX_OBJECT_PROPERTIES = 20;			// large object
 	private static final int MAX_OBJECT_LOC = 750;				// large object
 	
 

@@ -44,8 +44,8 @@ public class Crawler implements Runnable {
 
 	private static HashSet<JavaScriptObjectInfo> largeObjects = new HashSet<JavaScriptObjectInfo>();	// keeping dynamic large objects	
 	private static HashSet<JavaScriptObjectInfo> lazyObjects = new HashSet<JavaScriptObjectInfo>();		// keeping dynamic large objects
-	
-	
+
+
 	/**
 	 * Added by Amin
 	 * CrawlStrategy: different crawling strategies set in the guidedCrawl()
@@ -170,8 +170,8 @@ public class Crawler implements Runnable {
 		this.crawlQueueManager = mother.getCrawlQueueManager();
 		if (controller.getSession() != null) {
 			this.stateMachine =
-			        new StateMachine(controller.getSession().getStateFlowGraph(), controller
-			                .getSession().getInitialState(), controller.getInvariantList());
+					new StateMachine(controller.getSession().getStateFlowGraph(), controller
+							.getSession().getInitialState(), controller.getInvariantList());
 			stateMachine.setEfficientCrawling(controller.isEfficientCrawling());
 		} else {
 			/**
@@ -187,7 +187,7 @@ public class Crawler implements Runnable {
 	 */
 	public void goToInitialURL() {
 		LOGGER.info("Loading Page "
-		        + configurationReader.getCrawlSpecificationReader().getSiteUrl());
+				+ configurationReader.getCrawlSpecificationReader().getSiteUrl());
 		getBrowser().goToUrl(configurationReader.getCrawlSpecificationReader().getSiteUrl());
 		/**
 		 * Thread safe
@@ -205,7 +205,7 @@ public class Crawler implements Runnable {
 	 */
 	private boolean fireEvent(Eventable eventable) {
 		if (eventable.getIdentification().getHow().toString().equals("xpath")
-		        && eventable.getRelatedFrame().equals("")) {
+				&& eventable.getRelatedFrame().equals("")) {
 
 			/**
 			 * The path in the page to the 'clickable' (link, div, span, etc)
@@ -223,10 +223,10 @@ public class Crawler implements Runnable {
 			String newXPath = new ElementResolver(eventable, getBrowser()).resolve();
 			if (newXPath != null && !xpath.equals(newXPath)) {
 				LOGGER.info("XPath changed from " + xpath + " to " + newXPath + " relatedFrame:"
-				        + eventable.getRelatedFrame());
+						+ eventable.getRelatedFrame());
 				eventable =
-				        new Eventable(new Identification(Identification.How.xpath, newXPath),
-				                eventType);
+						new Eventable(new Identification(Identification.How.xpath, newXPath),
+								eventType);
 			}
 		}
 
@@ -250,7 +250,7 @@ public class Crawler implements Runnable {
 			 * removed 1 state to represent the path TO here.
 			 */
 			CrawljaxPluginsUtil.runOnFireEventFailedPlugins(eventable, controller.getSession()
-			        .getCurrentCrawlPath().immutableCopy(true));
+					.getCurrentCrawlPath().immutableCopy(true));
 			return false; // no event fired
 		}
 	}
@@ -293,7 +293,7 @@ public class Crawler implements Runnable {
 			}
 
 			LOGGER.info("Backtracking by executing " + clickable.getEventType() + " on element: "
-			        + clickable);
+					+ clickable);
 
 			this.getStateMachine().changeState(clickable.getTargetStateVertix());
 
@@ -312,7 +312,7 @@ public class Crawler implements Runnable {
 				 * Run the onRevisitStateValidator(s)
 				 */
 				CrawljaxPluginsUtil.runOnRevisitStatePlugins(this.controller.getSession(),
-				        curState);
+						curState);
 			}
 
 			if (!controller.getElementChecker().checkCrawlCondition(getBrowser())) {
@@ -333,7 +333,7 @@ public class Crawler implements Runnable {
 		this.handleInputElements(eventable);
 
 		LOGGER.info("Executing " + eventable.getEventType() + " on element: " + eventable
-		        + "; State: " + this.getStateMachine().getCurrentState().getName());
+				+ "; State: " + this.getStateMachine().getCurrentState().getName());
 
 
 		// Added by Amin: reducing from CandidateElements of the current state
@@ -344,14 +344,14 @@ public class Crawler implements Runnable {
 
 
 
-		
+
 		/**
 		 * Dynamic extraction of javaScript objects and properties in browser 
 		 */
-		
+
 		// getCoverage should be set true for dead unused/code detection
 		boolean getCoverage = true;
-	
+
 		/**
 		 * Fetching list of globals dynamically at runtime
 		 */
@@ -359,9 +359,9 @@ public class Crawler implements Runnable {
 			Object globals =  this.browser.executeJavaScript("" +
 					"var ownPropertiesArray = []; " +
 					"for (var property in window){" +
-						"if (window.hasOwnProperty(property)){" +
-							"ownPropertiesArray.push(property); " +
-						"}" +
+					"if (window.hasOwnProperty(property)){" +
+					"ownPropertiesArray.push(property); " +
+					"}" +
 					"} " +
 					" return ownPropertiesArray;");
 			ArrayList globalVars = (ArrayList) globals;
@@ -384,142 +384,141 @@ public class Crawler implements Runnable {
 			System.out.println("********** RUNTIME GLOBALS DETECTION **********");
 			System.out.println("Total number of global variables: " + globalsVarList.size());
 			System.out.println("Globals are: " + globalsVarList);
-			
+
 			// send the list to the smell detector main class
 			SmellDetector.setGlobals(globalsVarList);
-			
+
 		}catch (Exception e) {
 			LOGGER.info("Could not execute script");
 		}
-		
-		
-		
-		
-		
-		
-	
-		
+
+
+
+
+
 		ArrayList<JavaScriptObjectInfo> jsObjects = new ArrayList<JavaScriptObjectInfo>();
 		for (String candidateJSObject : SmellDetector.getcandidateJSObjectList()){
 			try{
-			Object isObject =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"object\") return true;");
-			//System.out.println(isObject + " "+candidateJSObject);
-			if (isObject!=null && isObject.toString().equals("true")){
-				//System.out.println(candidateJSObject + " is an object!");
+				Object isObject =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"object\") return true;");
+				Object isFunction =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"function\") return true;");
 				
-				JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0,-1);
-				
-				//Adding properties and prototype to the newJSObj
+				//System.out.println(isObject + " "+candidateJSObject);
+				if (isObject!=null && isObject.toString().equals("true")){
+					//System.out.println(candidateJSObject + " is an object!");
 
-				Object ownPropertiesArray =  this.browser.executeJavaScript("" +
-						"var ownPropertiesArray = []; " +
-						"for (var property in " + candidateJSObject + "){" +
+					JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0,-1);
+
+					//Adding properties and prototype to the newJSObj
+
+					Object ownPropertiesArray =  this.browser.executeJavaScript("" +
+							"var ownPropertiesArray = []; " +
+							"for (var property in " + candidateJSObject + "){" +
 							"if (" + candidateJSObject + ".hasOwnProperty(property)){" +
-								"ownPropertiesArray.push(property); " +
+							"ownPropertiesArray.push(property); " +
 							"}" +
-						"} " +
-						" return ownPropertiesArray;");
-				
-				Object inheritedPropertiesArray =  this.browser.executeJavaScript("" +
-						"var inheritedPropertiesArray = []; " +
-						"for (var property in " + candidateJSObject + "){" +
+							"} " +
+							" return ownPropertiesArray;");
+
+					Object inheritedPropertiesArray =  this.browser.executeJavaScript("" +
+							"var inheritedPropertiesArray = []; " +
+							"for (var property in " + candidateJSObject + "){" +
 							"if (!" + candidateJSObject + ".hasOwnProperty(property)){" +
-								"inheritedPropertiesArray.push(property); " +
+							"inheritedPropertiesArray.push(property); " +
 							"}" +
-						"} " +
-						" return inheritedPropertiesArray;");
-
-				
-				//System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
-				//System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
-				
-				ArrayList ownProperties = (ArrayList) ownPropertiesArray;
-				ArrayList inheritedProperties = (ArrayList) inheritedPropertiesArray;
+							"} " +
+							" return inheritedPropertiesArray;");
 
 
-				for (int i=0;i<ownProperties.size();i++){
-					//System.out.println((String)ownProperties.get(i).toString());
-					newJSObj.addOwnProperty((String)ownProperties.get(i).toString());
-				}
+					//System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
+					//System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
 
-				for (int i=0;i<inheritedProperties.size();i++){
-					//System.out.println((String)inheritedProperties.get(i).toString());
-					newJSObj.addInheritedPropetries((String)inheritedProperties.get(i).toString());
-				}
+					ArrayList ownProperties = (ArrayList) ownPropertiesArray;
+					ArrayList inheritedProperties = (ArrayList) inheritedPropertiesArray;
 
-				
-				SmellDetector.addDynamicObject(newJSObj);
-				
-				
-				if (!candidateJSObject.equals("window") && !candidateJSObject.equals("document")  
-						&& !candidateJSObject.equals("top")  && !candidateJSObject.equals("navigator")
-						&& !candidateJSObject.equals("location")  && !candidateJSObject.equals("InstallTrigger")
-						&& !candidateJSObject.equals("fxdriver_id")  && !candidateJSObject.equals("__fxdriver_unwrapped")
-						&& !candidateJSObject.contains("exec_counter")){
 
-		
-					if (ownProperties.size() < SmellDetector.MIN_OBJECT_PROPERTIES){
-						//System.out.println("********** RUNTIME LAZY DETECTION **********");
-						//System.out.println("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
-						if (!lazyObjects.contains(newJSObj))		// add the new object if does not already exist
-							lazyObjects.add(newJSObj);
-
-					}
-					if (ownProperties.size() > SmellDetector.MAX_OBJECT_PROPERTIES){
-						//System.out.println("********** RUNTIME LARGE DETECTION **********");
-						//System.out.println("Large object: " + candidateJSObject + " with properties:" + ownProperties);
-						if (!largeObjects.contains(newJSObj))		// add the new object if does not already exist
-							largeObjects.add(newJSObj);
+					for (int i=0;i<ownProperties.size();i++){
+						//System.out.println((String)ownProperties.get(i).toString());
+						newJSObj.addOwnProperty((String)ownProperties.get(i).toString());
 					}
 
-				}
+					for (int i=0;i<inheritedProperties.size();i++){
+						//System.out.println((String)inheritedProperties.get(i).toString());
+						newJSObj.addInheritedPropetries((String)inheritedProperties.get(i).toString());
+					}
 
 
-				
-				//Adding prototype chain to the newJSObj
-				/*Object prototype;
-				if (!candidateJSObject.equals("document") && !candidateJSObject.equals("top") && !candidateJSObject.equals("window")){
-				//if (candidateJSObject.equals("dog")){
-					prototype =  this.browser.executeJavaScript("" +
-						" return " + candidateJSObject + ";");
+					SmellDetector.addDynamicObject(newJSObj);
+
+
+					if (!candidateJSObject.equals("window") && !candidateJSObject.equals("document")  
+							&& !candidateJSObject.equals("top")  && !candidateJSObject.equals("navigator")
+							&& !candidateJSObject.equals("location")  && !candidateJSObject.equals("InstallTrigger")
+							&& !candidateJSObject.equals("fxdriver_id")  && !candidateJSObject.equals("__fxdriver_unwrapped")
+							&& !candidateJSObject.contains("exec_counter")){
+
+
+						if (ownProperties.size() < SmellDetector.MIN_OBJECT_PROPERTIES){
+							//System.out.println("********** RUNTIME LAZY DETECTION **********");
+							//System.out.println("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
+							if (!lazyObjects.contains(newJSObj))		// add the new object if does not already exist
+								lazyObjects.add(newJSObj);
+
+						}
+						if (ownProperties.size() > SmellDetector.MAX_OBJECT_PROPERTIES){
+							//System.out.println("********** RUNTIME LARGE DETECTION **********");
+							//System.out.println("Large object: " + candidateJSObject + " with properties:" + ownProperties);
+							if (!largeObjects.contains(newJSObj))		// add the new object if does not already exist
+								largeObjects.add(newJSObj);
+						}
+
+					}
+
+
+
+					//Adding prototype chain to the newJSObj
+					Object prototype;
+					if (!candidateJSObject.equals("document") && !candidateJSObject.equals("top") && !candidateJSObject.equals("window")){
+						//if (candidateJSObject.equals("dog")){
+						prototype =  this.browser.executeJavaScript("" +
+								" return " + candidateJSObject + ";");
 						//" return Object.getPrototypeOf(" + candidateJSObject + ");");
-					System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+						//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
 
-					//prototype =  this.browser.executeJavaScript("" +
-					//		" return Object.getPrototypeOf(" + candidateJSObject + ");");
-					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+						//prototype =  this.browser.executeJavaScript("" +
+						//		" return Object.getPrototypeOf(" + candidateJSObject + ");");
+						//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
 
-					
-					//Object prototypeChain =  this.browser.executeJavaScript("" +
-					//		"var prototypeChainArray = []; " +
-					//		"prototypeChainIterator = " + candidateJSObject + ";" +
-					//		"while (prototypeChainIterator != null) {" +
-					//		    "prototypeChainIterator = Object.getPrototypeOf(prototypeChainIterator);"+
-					//		    "prototypeChainArray.push(prototypeChainIterator);"+
-					//		"}"+
-					//		" return prototypeChainArray;");
-					//System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
+
+						//Object prototypeChain =  this.browser.executeJavaScript("" +
+						//		"var prototypeChainArray = []; " +
+						//		"prototypeChainIterator = " + candidateJSObject + ";" +
+						//		"while (prototypeChainIterator != null) {" +
+						//		    "prototypeChainIterator = Object.getPrototypeOf(prototypeChainIterator);"+
+						//		    "prototypeChainArray.push(prototypeChainIterator);"+
+						//		"}"+
+						//		" return prototypeChainArray;");
+						//System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
+					}
+
+
+					//System.out.println();
+
 				}
-				*/
-
-				//System.out.println();
-
-			}
 			}catch (Exception e) {
 				LOGGER.info("Could not execute script");
 			}
 		}
 
 
-		
-		
+
+
 		if (this.fireEvent(eventable)) {
 			StateVertix newState =
-				new StateVertix(getBrowser().getCurrentUrl(), controller.getSession()
-						.getStateFlowGraph().getNewStateName(), getBrowser().getDom(),
-						this.controller.getStrippedDom(getBrowser()), backTrackPath);
+					new StateVertix(getBrowser().getCurrentUrl(), controller.getSession()
+							.getStateFlowGraph().getNewStateName(), getBrowser().getDom(),
+							this.controller.getStrippedDom(getBrowser()), backTrackPath);
 
-			
+
 			if (getCoverage){
 				//Amin: calculate code coverage
 				for (String modifiedJS : JSModifyProxyPlugin.getModifiedJSList()){
@@ -531,18 +530,18 @@ public class Crawler implements Runnable {
 						LOGGER.info("Could not execute script");
 					}
 
-			
+
 				}
-				
-				
+
+
 				double cov = this.controller.getCoverage();
 
 				if (controller.isDiverseCrawling())
 					controller.getSession().getStateFlowGraph().setLatestCoverage(cov);
 			}
 
-			
-			
+
+
 
 			boolean domMutationNotifierPluginCheck = this.controller.getDomMutationNotifierPluginCheck();
 			boolean isDomChanged=true;
@@ -562,7 +561,7 @@ public class Crawler implements Runnable {
 				// Either there is no domMutationNotifierPluginCheck or
 				// Dom might have been changed. Thus a complete Dom comparison must be done
 
-			//    if (isDomChanged(this.getStateMachine().getCurrentState(), newState)) {
+				//    if (isDomChanged(this.getStateMachine().getCurrentState(), newState)) {
 
 				if (CrawljaxPluginsUtil.runDomChangeNotifierPlugin(this.getStateMachine().getCurrentState(), eventable, newState)) {
 
@@ -622,9 +621,9 @@ public class Crawler implements Runnable {
 	private boolean depthLimitReached(int depth) {
 
 		if (this.depth >= configurationReader.getCrawlSpecificationReader().getDepth()
-		        && configurationReader.getCrawlSpecificationReader().getDepth() != 0) {
+				&& configurationReader.getCrawlSpecificationReader().getDepth() != 0) {
 			LOGGER.info("DEPTH " + depth + " reached returning from rec call. Given depth: "
-			        + configurationReader.getCrawlSpecificationReader().getDepth());
+					+ configurationReader.getCrawlSpecificationReader().getDepth());
 			return true;
 		} else {
 			return false;
@@ -638,8 +637,8 @@ public class Crawler implements Runnable {
 				this.crawlQueueManager.addWorkToQueue(c);
 			}
 			c =
-			        new Crawler(this.controller, controller.getSession().getCurrentCrawlPath()
-			                .immutableCopy(true));
+					new Crawler(this.controller, controller.getSession().getCurrentCrawlPath()
+							.immutableCopy(true));
 		} while (state.registerCrawler(c));
 	}
 
@@ -653,38 +652,38 @@ public class Crawler implements Runnable {
 			ClickResult clickResult = clickTag(new Eventable(candidateElement, eventType));
 
 			switch (clickResult) {
-				case cloneDetected:
-					fired = false;
-					// We are in the clone state so we continue with the cloned version to search for work.
-					this.controller.getSession().branchCrawlPath();
-					spawnThreads(orrigionalState);
-					break;
-				case newState:
-					fired = true;
-					// Recurse because new state found
-					spawnThreads(orrigionalState);
+			case cloneDetected:
+				fired = false;
+				// We are in the clone state so we continue with the cloned version to search for work.
+				this.controller.getSession().branchCrawlPath();
+				spawnThreads(orrigionalState);
+				break;
+			case newState:
+				fired = true;
+				// Recurse because new state found
+				spawnThreads(orrigionalState);
 
-					//Amin: This is not used anymore due to single-threading diverse crawling
-					//LOGGER.info("New state found!");
-					// Amin: pause crawling if diverse crawling is set to true and if all browsers are opened
-					//if (controller.isDiverseCrawling() && controller.allBrowsersOpened()){
-					//	LOGGER.info("Thread will be paused for diverse crawling...");
-					//	pauseFlag = true;
-					//	pauseCrawling();
-					//}
+				//Amin: This is not used anymore due to single-threading diverse crawling
+				//LOGGER.info("New state found!");
+				// Amin: pause crawling if diverse crawling is set to true and if all browsers are opened
+				//if (controller.isDiverseCrawling() && controller.allBrowsersOpened()){
+				//	LOGGER.info("Thread will be paused for diverse crawling...");
+				//	pauseFlag = true;
+				//	pauseCrawling();
+				//}
 
-					break;
-				case domUnChanged:
-					// Dom not updated, continue with the next
-					break;
-				default:
-					break;
+				break;
+			case domUnChanged:
+				// Dom not updated, continue with the next
+				break;
+			default:
+				break;
 			}
 			return clickResult;
 		} else {
 
 			LOGGER.info("Conditions not satisfied for element: " + candidateElement + "; State: "
-			        + this.getStateMachine().getCurrentState().getName());
+					+ this.getStateMachine().getCurrentState().getName());
 		}
 		return ClickResult.domUnChanged;
 	}
@@ -727,12 +726,12 @@ public class Crawler implements Runnable {
 			// Amin: just for logging
 			// LOGGER.info("Outer # candidateElements for state " + orrigionalState.getName() + " is ZERO!");
 
-		// Amin: check if there were not candidateElements for the current state (i.e., is leaf node)
-		if (orrigionalState.isFullyExpanded())
-			this.controller.getSession().getStateFlowGraph().removeFromNotFullExpandedStates(orrigionalState);
+			// Amin: check if there were not candidateElements for the current state (i.e., is leaf node)
+			if (orrigionalState.isFullyExpanded())
+				this.controller.getSession().getStateFlowGraph().removeFromNotFullExpandedStates(orrigionalState);
 
 		CandidateCrawlAction action =
-			orrigionalState.pollCandidateCrawlAction(this, crawlQueueManager);
+				orrigionalState.pollCandidateCrawlAction(this, crawlQueueManager);
 
 
 		while (action != null) {
@@ -748,13 +747,13 @@ public class Crawler implements Runnable {
 			orrigionalState.finishedWorking(this, action);
 
 			switch (result) {
-				case newState:
-					boolean detected = newStateDetected(orrigionalState);
-					return detected;
-				case cloneDetected:
-					return true;
-				default:
-					break;
+			case newState:
+				boolean detected = newStateDetected(orrigionalState);
+				return detected;
+			case cloneDetected:
+				return true;
+			default:
+				break;
 			}
 
 			action = orrigionalState.pollCandidateCrawlAction(this, crawlQueueManager);
@@ -814,12 +813,12 @@ public class Crawler implements Runnable {
 		}
 		// TODO Stefan ideally this should be placed in the constructor
 		this.formHandler =
-		        new FormHandler(getBrowser(), configurationReader.getInputSpecification(),
-		                configurationReader.getCrawlSpecificationReader().getRandomInputInForms());
+				new FormHandler(getBrowser(), configurationReader.getInputSpecification(),
+						configurationReader.getCrawlSpecificationReader().getRandomInputInForms());
 
 		this.candidateExtractor =
-		        new CandidateElementExtractor(controller.getElementChecker(), this.getBrowser(),
-		                formHandler, configurationReader.getCrawlSpecificationReader());
+				new CandidateElementExtractor(controller.getElementChecker(), this.getBrowser(),
+						formHandler, configurationReader.getCrawlSpecificationReader());
 		/**
 		 * go back into the previous state.
 		 */
@@ -839,17 +838,17 @@ public class Crawler implements Runnable {
 		//System.out.println("DYNAMICALLY INFERRED LAZY OBJECTS");
 		//for (JavaScriptObjectInfo lazy: lazyObjects)
 		//	System.out.println(lazy.getName());
-		
+
 		//System.out.println("DYNAMICALLY INFERRED LARGE OBJECTS");
 		//for (JavaScriptObjectInfo large: largeObjects)
 		//	System.out.println(large.getName());
 
 		SmellDetector.filterObjects(largeObjects, lazyObjects);
-		
+
 		// generate the last report
 		SmellDetector.generateReport();
 
-		
+
 		controller.getBrowserPool().freeBrowser(this.getBrowser());
 	}
 
@@ -916,12 +915,12 @@ public class Crawler implements Runnable {
 			// The connection of the browser has gone down, most of the times it means that the
 			// browser process has crashed.
 			LOGGER.error("Crawler failed because the used browser died during Crawling",
-			        new CrawlPathToException("Crawler failed due to browser crash", controller
-			                .getSession().getCurrentCrawlPath(), e));
+					new CrawlPathToException("Crawler failed due to browser crash", controller
+							.getSession().getCurrentCrawlPath(), e));
 			// removeBrowser will throw a RuntimeException if the current browser is the last
 			// browser in the pool.
 			this.controller.getBrowserPool().removeBrowser(this.getBrowser(),
-			        this.controller.getCrawlQueueManager());
+					this.controller.getCrawlQueueManager());
 			return;
 		} catch (CrawljaxException e) {
 			LOGGER.error("Crawl failed!", e);
@@ -996,7 +995,7 @@ public class Crawler implements Runnable {
 		}
 		StateFlowGraph graph = controller.getSession().getStateFlowGraph();
 		int maxNumberOfStates =
-		        configurationReader.getCrawlSpecificationReader().getMaxNumberOfStates();
+				configurationReader.getCrawlSpecificationReader().getMaxNumberOfStates();
 		if ((maxNumberOfStates != 0) && (graph.getAllStates().size() >= maxNumberOfStates)) {
 			LOGGER.info("Max number of states " + maxNumberOfStates + " reached!");
 			/* stop crawling */
@@ -1049,32 +1048,32 @@ public class Crawler implements Runnable {
 			}else
 				//LOGGER.info("Outer # candidateElements for state " + orrigionalState.getName() + " is ZERO!");
 
-			// check if there were not candidateElements for the current state (i.e., is leaf node)
-			if (orrigionalState.isFullyExpanded())
-				this.controller.getSession().getStateFlowGraph().removeFromNotFullExpandedStates(orrigionalState);
-			else{
-				CandidateCrawlAction action =
-					orrigionalState.pollCandidateCrawlAction(this, crawlQueueManager);
+				// check if there were not candidateElements for the current state (i.e., is leaf node)
+				if (orrigionalState.isFullyExpanded())
+					this.controller.getSession().getStateFlowGraph().removeFromNotFullExpandedStates(orrigionalState);
+				else{
+					CandidateCrawlAction action =
+							orrigionalState.pollCandidateCrawlAction(this, crawlQueueManager);
 
-				ClickResult result = this.crawlAction(action);
+					ClickResult result = this.crawlAction(action);
 
-				orrigionalState.finishedWorking(this, action);
+					orrigionalState.finishedWorking(this, action);
 
-				switch (result) {
-				case newState:
-					System.out.println("backTrackPath for new state " +this.getStateMachine().getCurrentState().getName()+ " is " + backTrackPath);
-					this.getStateMachine().getCurrentState().setCrawlPathToState(controller.getSession().getCurrentCrawlPath());
+					switch (result) {
+					case newState:
+						System.out.println("backTrackPath for new state " +this.getStateMachine().getCurrentState().getName()+ " is " + backTrackPath);
+						this.getStateMachine().getCurrentState().setCrawlPathToState(controller.getSession().getCurrentCrawlPath());
 
-					System.out.println("newState");
-					break;
-				case cloneDetected:
-					System.out.println("cloneDetected");
-					break;
-				default:
-					System.out.println("noChange");
-					break;
+						System.out.println("newState");
+						break;
+					case cloneDetected:
+						System.out.println("cloneDetected");
+						break;
+					default:
+						System.out.println("noChange");
+						break;
+					}
 				}
-			}
 
 			StateVertix currentState = this.getStateMachine().getCurrentState();
 			StateVertix previousState = this.getStateMachine().getPreviousState();
@@ -1101,70 +1100,70 @@ public class Crawler implements Runnable {
 			LOGGER.info("Next state to crawl is: " + nextToCrawl.getName());
 
 			switch (strategy){
-				case DFS:
-					if (!notFullExpandedStates.contains(currentState)){  // if the new state is fully expanded
-						LOGGER.info("changing original from " + currentState.getName());
-						this.getStateMachine().changeToNewState(nextToCrawl);
-						LOGGER.info(" to " + this.getStateMachine().getCurrentState().getName());
+			case DFS:
+				if (!notFullExpandedStates.contains(currentState)){  // if the new state is fully expanded
+					LOGGER.info("changing original from " + currentState.getName());
+					this.getStateMachine().changeToNewState(nextToCrawl);
+					LOGGER.info(" to " + this.getStateMachine().getCurrentState().getName());
 
-						// Start a new CrawlPath for this Crawler
-						controller.getSession().startNewPath();
-						LOGGER.info("Reloading page for navigating back");
-						this.goToInitialURL();
-						reloadToSate(nextToCrawl); // backtrack
-					}
-					break;
-				case BFS:
-					if (nextToCrawl.equals(currentState)){
-						// For BFS, this means event did not create new state, so continue with the same state.
-						LOGGER.info("same state will be crawled for the next clickable...");
-					}else{
-						LOGGER.info("changing original from " + currentState.getName());
-						this.getStateMachine().changeToNewState(nextToCrawl);
-						LOGGER.info(" to " + this.getStateMachine().getCurrentState().getName());
+					// Start a new CrawlPath for this Crawler
+					controller.getSession().startNewPath();
+					LOGGER.info("Reloading page for navigating back");
+					this.goToInitialURL();
+					reloadToSate(nextToCrawl); // backtrack
+				}
+				break;
+			case BFS:
+				if (nextToCrawl.equals(currentState)){
+					// For BFS, this means event did not create new state, so continue with the same state.
+					LOGGER.info("same state will be crawled for the next clickable...");
+				}else{
+					LOGGER.info("changing original from " + currentState.getName());
+					this.getStateMachine().changeToNewState(nextToCrawl);
+					LOGGER.info(" to " + this.getStateMachine().getCurrentState().getName());
 
-						// Start a new CrawlPath for this Crawler
-						controller.getSession().startNewPath();
-						LOGGER.info("Reloading page for navigating back");
-						this.goToInitialURL();
-						reloadToSate(nextToCrawl); // backtrack
-					}
-					break;
-				case Rand:
-					if (nextToCrawl.equals(currentState)){
-						// do nothing
-						LOGGER.info("same path will be continued...");
-					}else{
-						LOGGER.info("changing original from " + currentState.getName());
-						this.getStateMachine().changeToNewState(nextToCrawl);
-						LOGGER.info(" to " + this.getStateMachine().getCurrentState().getName());
+					// Start a new CrawlPath for this Crawler
+					controller.getSession().startNewPath();
+					LOGGER.info("Reloading page for navigating back");
+					this.goToInitialURL();
+					reloadToSate(nextToCrawl); // backtrack
+				}
+				break;
+			case Rand:
+				if (nextToCrawl.equals(currentState)){
+					// do nothing
+					LOGGER.info("same path will be continued...");
+				}else{
+					LOGGER.info("changing original from " + currentState.getName());
+					this.getStateMachine().changeToNewState(nextToCrawl);
+					LOGGER.info(" to " + this.getStateMachine().getCurrentState().getName());
 
-						// Start a new CrawlPath for this Crawler
-						controller.getSession().startNewPath();
-						LOGGER.info("Reloading page for navigating back");
-						this.goToInitialURL();
-						reloadToSate(nextToCrawl); // backtrack
-					}
-					break;
-				case Div:
-					if (nextToCrawl.equals(currentState)){
-						// do nothing
-						LOGGER.info("same path will be continued...");
-					}else{
-						LOGGER.info("changing original from " + currentState.getName());
-						this.getStateMachine().changeToNewState(nextToCrawl);
-						LOGGER.info(" to " + this.getStateMachine().getCurrentState().getName());
+					// Start a new CrawlPath for this Crawler
+					controller.getSession().startNewPath();
+					LOGGER.info("Reloading page for navigating back");
+					this.goToInitialURL();
+					reloadToSate(nextToCrawl); // backtrack
+				}
+				break;
+			case Div:
+				if (nextToCrawl.equals(currentState)){
+					// do nothing
+					LOGGER.info("same path will be continued...");
+				}else{
+					LOGGER.info("changing original from " + currentState.getName());
+					this.getStateMachine().changeToNewState(nextToCrawl);
+					LOGGER.info(" to " + this.getStateMachine().getCurrentState().getName());
 
-						// Start a new CrawlPath for this Crawler
-						controller.getSession().startNewPath();
-						LOGGER.info("Reloading page for navigating back");
-						this.goToInitialURL();
-						reloadToSate(nextToCrawl); // backtrack
-					}
-					break;
-				default:
-					System.out.println("Nothing!");
-					break;
+					// Start a new CrawlPath for this Crawler
+					controller.getSession().startNewPath();
+					LOGGER.info("Reloading page for navigating back");
+					this.goToInitialURL();
+					reloadToSate(nextToCrawl); // backtrack
+				}
+				break;
+			default:
+				System.out.println("Nothing!");
+				break;
 			}
 
 			orrigionalState = this.getStateMachine().getCurrentState();
@@ -1200,7 +1199,7 @@ public class Crawler implements Runnable {
 			}
 
 			LOGGER.info("Backtracking by executing " + clickable.getEventType() + " on element: "
-			        + clickable);
+					+ clickable);
 
 			this.getStateMachine().changeState(clickable.getTargetStateVertix());
 
@@ -1217,7 +1216,7 @@ public class Crawler implements Runnable {
 				 * Run the onRevisitStateValidator(s)
 				 */
 				CrawljaxPluginsUtil.runOnRevisitStatePlugins(this.controller.getSession(),
-				        curState);
+						curState);
 			}
 
 			if (!controller.getElementChecker().checkCrawlCondition(getBrowser())) {

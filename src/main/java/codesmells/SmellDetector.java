@@ -96,6 +96,11 @@ public class SmellDetector {
 	private static ArrayList<String> objectsToIgnore = new ArrayList<String>();	
 	
 	
+	private boolean checkForUnreachable = false;
+	private int levelToCheckForReachability = 0;
+	private static HashSet<SmellLocation> unReachable = new HashSet<SmellLocation>();	// keeping unreachable code line number
+
+	
 	/**
 	 * This list is for keeping name of candidate javascript objects found in the code
 	 * they are called candidate since some my not be actual objects
@@ -197,6 +202,9 @@ public class SmellDetector {
 		System.out.println("********** NESTED CALLBACK **********");
 		reportSmell(nestedCallBackFound);
 
+		System.out.println("********** UNREACHABLE CODE **********");
+		reportSmell(unReachable);
+		
 		
 		//System.out.println("********** OBJECT LIST **********");
 		//for (JavaScriptObjectInfo o: jsObjects)
@@ -464,6 +472,19 @@ public class SmellDetector {
         
 		
 		
+		
+		// check if the new statement is after return, break, continue, or throw AND at the same level
+		if (checkForUnreachable==true){
+			if (ASTNode.depth() == levelToCheckForReachability){
+				//System.out.println("Unreachable code at line: " + (ASTNode.getLineno()+1));
+				SmellLocation sl = new SmellLocation("Unreachable code",jsFileName,(ASTNode.getLineno()+1));
+				unReachable.add(sl);
+			}
+			checkForUnreachable = false;
+		}
+		
+		
+		
 		if (ASTNodeName.equals("Name"))
 			analyseNameNode();
 		else if (ASTNodeName.equals("VariableDeclaration"))
@@ -484,6 +505,8 @@ public class SmellDetector {
 			analyseAssignmentNode();
 		else if (ASTNodeName.equals("CatchClause"))
 			analyseCatchClause();
+		else if (ASTNodeName.equals("ReturnStatement") || ASTNodeName.equals("BreakStatement") || ASTNodeName.equals("ContinueStatement") || ASTNodeName.equals("ThrowStatement"))
+			analyseRechability();
 		else if (ASTNodeName.equals("Block"))
 			analyseBlock();		
 		else if (type == Token.SWITCH)
@@ -499,6 +522,14 @@ public class SmellDetector {
 	}
 
 
+	
+	// check if next statement is unreachable
+	private void analyseRechability() {
+		checkForUnreachable = true;
+		levelToCheckForReachability = ASTNode.depth();
+	}
+
+	
 	// detecting local variable
 	private void analyseVariable() {
 		//nextIsLocal = true;		

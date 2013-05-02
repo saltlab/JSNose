@@ -267,7 +267,7 @@ public class SmellDetector {
 
 				if (ownPropetries.size() < MIN_OBJECT_PROPERTIES){
 					sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
-					//System.out.println(jso.getName() + " is a lazy object because ownPropetries is " + ownPropetries);
+					System.out.println(jso.getName() + " is a lazy object because ownPropetries is " + ownPropetries);
 					lazyObjectsLocation.add(sl);
 				}
 
@@ -286,7 +286,7 @@ public class SmellDetector {
 				if (LOC >= MAX_OBJECT_LOC || ownPropetries.size() > MAX_OBJECT_PROPERTIES){
 					sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
 
-					//System.out.println(jso.getName() + " is a large object because LOC is " + LOC + " and ownPropetries.size() is " + ownPropetries.size());
+					System.out.println(jso.getName() + " is a large object because LOC is " + LOC + " and ownPropetries.size() is " + ownPropetries.size());
 					largeObjectsLocation.add(sl);
 				}
 
@@ -620,7 +620,7 @@ public class SmellDetector {
 					SmellLocation sl = new SmellLocation("CSS in JavaScript", jsFileName,(ASTNode.getLineno()+1));
 					System.out.println("CSSinJS : at line " + (ASTNode.getLineno()+1) + " of file: " + jsFileName);
 					CSSinJS.add(sl);
-				}else{
+				}else if (jsObjects.size()>0){
 
 					/*
     			  Adding a property to the current object
@@ -1233,7 +1233,7 @@ public class SmellDetector {
 					itemsToRemove.add(l);
 	
 		for (SmellLocation removeSmell :itemsToRemove){
-			//System.out.println("object " + removeSmell.getSmellyItemName() + " detected as dynamic large, removed from lazy list");
+			System.out.println("object " + removeSmell.getSmellyItemName() + " detected as dynamic large, removed from lazy list");
 			lazyObjectsLocation.remove(removeSmell);
 		}
 		
@@ -1245,7 +1245,7 @@ public class SmellDetector {
 					itemsToRemove.add(l);
 	
 		for (SmellLocation removeSmell :itemsToRemove){
-			//System.out.println("object " + removeSmell.getSmellyItemName() + " detected as dynamic lazy, removed from large list");
+			System.out.println("object " + removeSmell.getSmellyItemName() + " detected as dynamic lazy, removed from large list");
 			largeObjectsLocation.remove(removeSmell);
 		}
 

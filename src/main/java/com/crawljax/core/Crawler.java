@@ -460,15 +460,15 @@ public class Crawler implements Runnable {
 
 
 						if (ownProperties.size() < SmellDetector.MIN_OBJECT_PROPERTIES){
-							//System.out.println("********** RUNTIME LAZY DETECTION **********");
-							//System.out.println("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
+							System.out.println("********** RUNTIME LAZY DETECTION **********");
+							System.out.println("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
 							if (!lazyObjects.contains(newJSObj))		// add the new object if does not already exist
 								lazyObjects.add(newJSObj);
 
 						}
 						if (ownProperties.size() > SmellDetector.MAX_OBJECT_PROPERTIES){
-							//System.out.println("********** RUNTIME LARGE DETECTION **********");
-							//System.out.println("Large object: " + candidateJSObject + " with properties:" + ownProperties);
+							System.out.println("********** RUNTIME LARGE DETECTION **********");
+							System.out.println("Large object: " + candidateJSObject + " with properties:" + ownProperties);
 							if (!largeObjects.contains(newJSObj))		// add the new object if does not already exist
 								largeObjects.add(newJSObj);
 						}

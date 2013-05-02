@@ -31,39 +31,26 @@ public final class JSNoseExample {
 	private static boolean doClickOnce = true;         // true: click only once on each clickable, false: multiple click
 	
 	//Final selected experimental objects
-	//private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
-	//private static final String URL = "http://localhost/chess/index.html"; // chessGame
-	//private static final String URL = "http://127.0.0.1:8081/ajaxfilemanagerv_tinymce1.1/tinymce_test.php";  // TinyMCE
-	//private static final String URL = "http://localhost:8080/tudu-dwr/";   // TuduList
 
-	//private static final String URL = "http://localhost/same-game/";  // SameGame
-	//private static final String URL = "http://localhost/Tunnel/";  // Tunnel
-	//private static final String URL = "http://localhost/GhostBusters/";  // GhostBusters
-	//private static final String URL = "http://localhost/Symbolistic/";  // Symbolistic
+	//private static final String URL = "http://127.0.0.1:8081/ptable/";  		// PeriodicTable
+	//private static final String URL = "http://localhost/chess/index.html";	// chessGame
+	//private static final String URL = "http://localhost/Symbolistic/";  		// Symbolistic
+	//private static final String URL = "http://localhost/Tunnel/";  			// Tunnel
+	//private static final String URL = "http://localhost/GhostBusters/";  		// GhostBusters
+	private static final String URL = "http://localhost:8080/tudu-dwr/";   	// TuduList
 	//private static final String URL = "http://127.0.0.1:8081/fractal_viewer/fractal_viewer/";  //FractalViewer
+	//private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
 	//private static final String URL = "http://127.0.0.1:8081/TinySiteXml/";  // Small Ajax site
+	//private static final String URL = "http://127.0.0.1:8081/ajaxfilemanagerv_tinymce1.1/tinymce_test.php";  // TinyMCE
 
 	
-	//  For experiments on computing SFG DDPD cluster
-	//private static final int MAX_RUNTIME = 3600; 
-	//private static final int MAX_NUMBER_STATES = 50;  // for PhotoGallary
-	//private static final int MAX_NUMBER_STATES = 20;  // for Chessgame
-	//private static final int MAX_NUMBER_STATES = 15;  // for tudu
-	//private static final int MAX_NUMBER_STATES = 25;  // for TinyMCE
-
-	
-	//  For experiments on computing coverage and SFG size
 	private static final int MAX_NUMBER_STATES = 10000;
 	private static final int MAX_RUNTIME = 300;
-	
-	
-	//private static final int MAX_DEPTH = 3;
 	private static final int MAX_DEPTH = 0; // this indicates no depth-limit
 
-	//private static final String URL = "http://spci.st.ewi.tudelft.nl/demo/aowe/"; 
-	//private static final String URL = "http://localhost/ptable/";  // PeriodicTable
-	private static final String URL = "http://127.0.0.1:8081/ptable/";  // PeriodicTable
 	
+	//private static final String URL = "http://spci.st.ewi.tudelft.nl/demo/aowe/"; 
+	//private static final String URL = "http://localhost/same-game/";  // SameGame
 	//private static final String URL = "http://localhost/artemis/ajaxtabscontent/ajaxtabscontent/demo.htm";
 	//private static final String URL = "http://localhost/tinymce_3.5.7_jquery/%5Ctinymce/examples/";
 	//private static final String URL = "http://localhost/5/";  //

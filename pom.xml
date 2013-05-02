@@ -135,15 +135,12 @@ the various navigation paths and states within an Ajax application.</description
 			<version>${selenium.version}</version>
 		</dependency>
 				
-		
-		
+				
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-android-driver</artifactId>
 			<version>${selenium.version}</version>
 		</dependency>
-
-
 
 
 
@@ -382,6 +379,19 @@ the various navigation paths and states within an Ajax application.</description
 		<system>Google Code</system>
 		<url>https://code.google.com/p/crawljax/issues/list</url>
 	</issueManagement>
+	
+	
+	<repositories>
+	  <repository>
+	    <id>crawljax.mvn.repo</id>
+	    <url>https://github.com/crawljax/crawljax-mvn-repo/raw/master</url>
+	    <snapshots>
+	      <enabled>true</enabled>
+	      <updatePolicy>always</updatePolicy>
+	    </snapshots>
+	  </repository>
+	</repositories>
+
 
 	<distributionManagement>
 		<repository>

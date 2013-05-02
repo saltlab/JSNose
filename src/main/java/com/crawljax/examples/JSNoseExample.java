@@ -31,7 +31,7 @@ public final class JSNoseExample {
 	private static boolean doClickOnce = true;         // true: click only once on each clickable, false: multiple click
 	
 	//Final selected experimental objects
-	private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
+	//private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
 	//private static final String URL = "http://localhost/chess/index.html"; // chessGame
 	//private static final String URL = "http://127.0.0.1:8081/ajaxfilemanagerv_tinymce1.1/tinymce_test.php";  // TinyMCE
 	//private static final String URL = "http://localhost:8080/tudu-dwr/";   // TuduList
@@ -62,6 +62,8 @@ public final class JSNoseExample {
 
 	//private static final String URL = "http://spci.st.ewi.tudelft.nl/demo/aowe/"; 
 	//private static final String URL = "http://localhost/ptable/";  // PeriodicTable
+	private static final String URL = "http://127.0.0.1:8081/ptable/";  // PeriodicTable
+	
 	//private static final String URL = "http://localhost/artemis/ajaxtabscontent/ajaxtabscontent/demo.htm";
 	//private static final String URL = "http://localhost/tinymce_3.5.7_jquery/%5Ctinymce/examples/";
 	//private static final String URL = "http://localhost/5/";  //

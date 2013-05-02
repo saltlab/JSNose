@@ -395,66 +395,68 @@ public class Crawler implements Runnable {
 
 
 
-
 		ArrayList<JavaScriptObjectInfo> jsObjects = new ArrayList<JavaScriptObjectInfo>();
 		for (String candidateJSObject : SmellDetector.getcandidateJSObjectList()){
 			try{
-				Object isObject =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"object\") return true;");
-				Object isFunction =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"function\") return true;");
-				
-				//System.out.println(isObject + " "+candidateJSObject);
-				if (isObject!=null && isObject.toString().equals("true")){
-					//System.out.println(candidateJSObject + " is an object!");
 
-					JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0,-1);
-
-					//Adding properties and prototype to the newJSObj
-
-					Object ownPropertiesArray =  this.browser.executeJavaScript("" +
-							"var ownPropertiesArray = []; " +
-							"for (var property in " + candidateJSObject + "){" +
-							"if (" + candidateJSObject + ".hasOwnProperty(property)){" +
-							"ownPropertiesArray.push(property); " +
-							"}" +
-							"} " +
-							" return ownPropertiesArray;");
-
-					Object inheritedPropertiesArray =  this.browser.executeJavaScript("" +
-							"var inheritedPropertiesArray = []; " +
-							"for (var property in " + candidateJSObject + "){" +
-							"if (!" + candidateJSObject + ".hasOwnProperty(property)){" +
-							"inheritedPropertiesArray.push(property); " +
-							"}" +
-							"} " +
-							" return inheritedPropertiesArray;");
+				if (!candidateJSObject.equals("window") && !candidateJSObject.equals("document")  
+						&& !candidateJSObject.equals("top")  && !candidateJSObject.equals("navigator")
+						&& !candidateJSObject.equals("location")  && !candidateJSObject.equals("InstallTrigger")
+						&& !candidateJSObject.equals("fxdriver_id")  && !candidateJSObject.equals("__fxdriver_unwrapped")
+						&& !candidateJSObject.contains("exec_counter")){
 
 
-					//System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
-					//System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
+					Object isObject =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"object\") return true;");
+					Object isFunction =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"function\") return true;");
 
-					ArrayList ownProperties = (ArrayList) ownPropertiesArray;
-					ArrayList inheritedProperties = (ArrayList) inheritedPropertiesArray;
+					//System.out.println(isObject + " "+candidateJSObject);
+					if (isObject!=null && isObject.toString().equals("true")){
+						//System.out.println(candidateJSObject + " is an object!");
+
+						JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0,-1);
+
+						//Adding properties and prototype to the newJSObj
+
+						Object ownPropertiesArray =  this.browser.executeJavaScript("" +
+								"var ownPropertiesArray = []; " +
+								"for (var property in " + candidateJSObject + "){" +
+								"if (" + candidateJSObject + ".hasOwnProperty(property)){" +
+								"ownPropertiesArray.push(property); " +
+								"}" +
+								"} " +
+								" return ownPropertiesArray;");
+
+						Object inheritedPropertiesArray =  this.browser.executeJavaScript("" +
+								"var inheritedPropertiesArray = []; " +
+								"for (var property in " + candidateJSObject + "){" +
+								"if (!" + candidateJSObject + ".hasOwnProperty(property)){" +
+								"inheritedPropertiesArray.push(property); " +
+								"}" +
+								"} " +
+								" return inheritedPropertiesArray;");
 
 
-					for (int i=0;i<ownProperties.size();i++){
-						//System.out.println((String)ownProperties.get(i).toString());
-						newJSObj.addOwnProperty((String)ownProperties.get(i).toString());
-					}
+						//System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
+						//System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
 
-					for (int i=0;i<inheritedProperties.size();i++){
-						//System.out.println((String)inheritedProperties.get(i).toString());
-						newJSObj.addInheritedPropetries((String)inheritedProperties.get(i).toString());
-					}
+						ArrayList ownProperties = (ArrayList) ownPropertiesArray;
+						ArrayList inheritedProperties = (ArrayList) inheritedPropertiesArray;
 
 
-					SmellDetector.addDynamicObject(newJSObj);
+						for (int i=0;i<ownProperties.size();i++){
+							//System.out.println((String)ownProperties.get(i).toString());
+							newJSObj.addOwnProperty((String)ownProperties.get(i).toString());
+						}
+
+						for (int i=0;i<inheritedProperties.size();i++){
+							//System.out.println((String)inheritedProperties.get(i).toString());
+							newJSObj.addInheritedPropetries((String)inheritedProperties.get(i).toString());
+						}
 
 
-					if (!candidateJSObject.equals("window") && !candidateJSObject.equals("document")  
-							&& !candidateJSObject.equals("top")  && !candidateJSObject.equals("navigator")
-							&& !candidateJSObject.equals("location")  && !candidateJSObject.equals("InstallTrigger")
-							&& !candidateJSObject.equals("fxdriver_id")  && !candidateJSObject.equals("__fxdriver_unwrapped")
-							&& !candidateJSObject.contains("exec_counter")){
+						SmellDetector.addDynamicObject(newJSObj);
+
+
 
 
 						if (ownProperties.size() < SmellDetector.MIN_OBJECT_PROPERTIES){
@@ -476,29 +478,23 @@ public class Crawler implements Runnable {
 
 
 					//Adding prototype chain to the newJSObj
-					Object prototype;
-					if (!candidateJSObject.equals("document") && !candidateJSObject.equals("top") && !candidateJSObject.equals("window")){
-						//if (candidateJSObject.equals("dog")){
-						prototype =  this.browser.executeJavaScript("" +
-								" return " + candidateJSObject + ";");
-						//" return Object.getPrototypeOf(" + candidateJSObject + ");");
-						//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+					//Object prototype =  this.browser.executeJavaScript("return Object.getPrototypeOf(" + candidateJSObject + ");");
+					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
 
-						//prototype =  this.browser.executeJavaScript("" +
-						//		" return Object.getPrototypeOf(" + candidateJSObject + ");");
-						//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+					//prototype =  this.browser.executeJavaScript("" +
+					//		" return Object.getPrototypeOf(" + candidateJSObject + ");");
+					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
 
 
-						//Object prototypeChain =  this.browser.executeJavaScript("" +
-						//		"var prototypeChainArray = []; " +
-						//		"prototypeChainIterator = " + candidateJSObject + ";" +
-						//		"while (prototypeChainIterator != null) {" +
-						//		    "prototypeChainIterator = Object.getPrototypeOf(prototypeChainIterator);"+
-						//		    "prototypeChainArray.push(prototypeChainIterator);"+
-						//		"}"+
-						//		" return prototypeChainArray;");
-						//System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
-					}
+					//Object prototypeChain =  this.browser.executeJavaScript("" +
+					//		"var prototypeChainArray = []; " +
+					//		"prototypeChainIterator = " + candidateJSObject + ";" +
+					//		"while (prototypeChainIterator != null) {" +
+					//		    "prototypeChainIterator = Object.getPrototypeOf(prototypeChainIterator);"+
+					//		    "prototypeChainArray.push(prototypeChainIterator);"+
+					//		"}"+
+					//		" return prototypeChainArray;");
+					//System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
 
 
 					//System.out.println();

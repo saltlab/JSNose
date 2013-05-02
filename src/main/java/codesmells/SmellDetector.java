@@ -68,7 +68,7 @@ public class SmellDetector {
 	
 	private int lastFunctionDepth = 0;
 	private int scopeChainLength = 0;
-	private static HashSet<SmellLocation> longScopeChainFound = new HashSet<SmellLocation>();	// keeping line number of the inner function of a deep closure
+	private static HashSet<SmellLocation> closureSmellLocation = new HashSet<SmellLocation>();	// keeping line number of the inner function of a deep closure
 	private static HashSet<SmellLocation> nestedCallBackFound = new HashSet<SmellLocation>();	// keeping line number of the inner function of a deep closure
 
 	private static int inlineJavaScriptLines = 0;
@@ -193,7 +193,7 @@ public class SmellDetector {
 		//	System.out.println("Scope having the inline JavaScript: " + sn);
 		
 		System.out.println("********** CLOSURE SMELL **********");
-		reportSmell(longScopeChainFound);
+		reportSmell(closureSmellLocation);
 
 		System.out.println("********** LONG PROTOTYPE CHAIN **********");
 		reportSmell(longPrototypeChainObjLocation);
@@ -511,6 +511,8 @@ public class SmellDetector {
 			analyseBlock();		
 		else if (type == Token.SWITCH)
 			isSwitchSmell();
+		else if (type == Token.THIS)
+			thisInClosure();
 		
 
 		//System.out.println();
@@ -522,7 +524,17 @@ public class SmellDetector {
 	}
 
 
-	
+	// checking if "this" is used in closure
+	private void thisInClosure() {
+		if (scopeChainLength > 1){
+			SmellLocation sl = new SmellLocation("this in closure", jsFileName, ASTNode.getLineno()+1);
+			closureSmellLocation.add(sl);
+		}
+
+	}
+
+
+
 	// check if next statement is unreachable
 	private void analyseRechability() {
 		checkForUnreachable = true;
@@ -796,13 +808,15 @@ public class SmellDetector {
 
 
 
+		System.out.println("lastFunctionDepth is :" + lastFunctionDepth);
+
 		// keep track of nested function (scope chain)
 		if (fDepth > lastFunctionDepth){
 			scopeChainLength++;
 			//System.out.println("scopeChainLength is :" + scopeChainLength + " at line: " + lineNumber);
-			if (scopeChainLength >= MAX_LENGTH_OF_SCOPE_CHAIN){
-				SmellLocation sl = new SmellLocation(fName, jsFileName,lineNumber);
-				longScopeChainFound.add(sl);
+			if (scopeChainLength > MAX_LENGTH_OF_SCOPE_CHAIN){
+				SmellLocation sl = new SmellLocation("Long scope chain at function: " + fName, jsFileName,lineNumber);
+				closureSmellLocation.add(sl);
 
 				if (callBackFound){
 					//System.out.println("Callback found in nested functions at line : " + lineNumber + " of fileName: " + fName);
@@ -812,6 +826,7 @@ public class SmellDetector {
 			}
 		}else
 			scopeChainLength = 1;
+		
 		lastFunctionDepth = fDepth;
 		
 			
@@ -882,10 +897,9 @@ public class SmellDetector {
 
 
 	public void analyseFunctionCallNode() {
-		/*
-		   dealing with x = Object.create() and x = new Object();
-		 */
+		
 		FunctionCall fcall = (FunctionCall) ASTNode;
+		//System.out.println(ASTNode.debugPrint());
 		
 		// check for callback
 		boolean detected = false;
@@ -899,7 +913,9 @@ public class SmellDetector {
 			callBackFound = false;
 		
 		
-		currentPrototype = getPrototypeOfObjectCreateStyle(fcall.debugPrint());
+		/*
+		   dealing with x = Object.create() and x = new Object();
+		 */		currentPrototype = getPrototypeOfObjectCreateStyle(fcall.debugPrint());
 		if (currentPrototype!=""){
 			//System.out.println("Prototype is :" + currentPrototype);
 
@@ -1005,10 +1021,8 @@ public class SmellDetector {
 	}
 	
 	
-	// find CSSinJS style 				
-	//SmellLocation sl = new SmellLocation(fName, jsFileName,lineNumber);
-	// longScopeChainFound.add(sl);
-	
+
+
 	
 	// just some parsing to get the identifier in front of the NAME
 	private String getName(String astDebugFormat, int j) {
@@ -1073,7 +1087,7 @@ public class SmellDetector {
 
 		SwitchStatement  s = (SwitchStatement)ASTNode;
 
-		System.out.println("switch found at line: " + (ASTNode.getLineno()+1) + " and has " + s.getCases().size() + " statements");
+		//System.out.println("switch found at line: " + (ASTNode.getLineno()+1) + " and has " + s.getCases().size() + " statements");
 
 		if (s.getCases().size() > MAX_NUMBER_OF_SWITCHCASE){
 			SmellLocation sl = new SmellLocation("switch", jsFileName,(ASTNode.getLineno()+1));

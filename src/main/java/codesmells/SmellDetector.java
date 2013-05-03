@@ -80,7 +80,8 @@ public class SmellDetector {
 	private static HashSet<String> globals = new HashSet<String>();	// keeping global variables
 	
 	public static void setGlobals(HashSet<String> globals) {
-		SmellDetector.globals = globals;
+		for (String g: globals)
+			SmellDetector.globals.add(g);
 	}
 
 	

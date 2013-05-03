@@ -172,6 +172,9 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 		excludeFilenamePatterns.add(".*unittest.js");
 	//	excludeFilenamePatterns.add(".*engine.js");
 		excludeFilenamePatterns.add(".*util.js");
+		
+		//exclude for collegesvis
+		excludeFilenamePatterns.add(".*raphael.min.js");
 	}
 
 	@Override

@@ -126,8 +126,12 @@ public class SmellDetector {
 		objectsToIgnore.add("InstallTrigger");
 		objectsToIgnore.add("fxdriver_id");
 		objectsToIgnore.add("__fxdriver_unwrapped");
-
+		objectsToIgnore.add("jQuery");
+		objectsToIgnore.add("$");
+		objectsToIgnore.add("setInterval");
+		objectsToIgnore.add("setTimeout");
 	}
+	
 
 	public void SetASTNode(AstNode node) {
 		ASTNode = node;
@@ -261,7 +265,7 @@ public class SmellDetector {
 			//System.out.println("ownPropetries of :" + jso.getName() + " is: " + ownPropetries);
 			
 			
-			if (!objectsToIgnore.contains(jso.getName())){
+			if (!objectsToIgnore.contains(jso.getName()) && !jso.getPrototype().equals("Date") && !jso.getPrototype().equals("XMLHttpRequest")){
 				/**
 				 * Detecting lazy object
 				 */

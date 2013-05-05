@@ -76,7 +76,8 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	
 
 	// Amin: keep track of event handlers
-	private HashSet<Node> eventList = new HashSet<Node>();
+	private HashSet<Node> eventList1 = new HashSet<Node>();
+	private HashSet<String> jsInTag = new HashSet<String>();
 	private boolean foundTagsWithJS = false;
 	
 	
@@ -236,9 +237,9 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			 */
 			if (scopename.contains("script")){
 				//System.out.println("scopename : " + getJSName(scopename));
-				SmellDetector.analyseCoupling(jsName, input, eventList);
+				SmellDetector.analyseCoupling(jsName, input, jsInTag);
 			}else if (foundTagsWithJS){
-				SmellDetector.analyseCoupling("main_html", "", eventList);
+				SmellDetector.analyseCoupling("main_html", "", jsInTag);
 			}
 
 			
@@ -547,7 +548,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 					}
 					
 					/* also consider javascript in tags if there is no <script> */
-					if (eventList.size() > 0)
+					if (jsInTag.size() > 0)
 						foundTagsWithJS = true;
 					
 					
@@ -577,9 +578,14 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			for (int j = 0; j < eventable.getLength(); j++) {
 				foundAttribute = eventable.item(j).getAttributes().getNamedItem(attributes[i]);
 				if ((foundAttribute != null && foundAttribute.getTextContent() != null)){
-					//String content = eventable.item(j).getTextContent();
-					//System.out.println("Found " + attributes[i]);
-					eventList.add(eventable.item(j));
+					String tag = eventable.item(j).getNodeName() + " ";
+					Node c = eventable.item(j).getAttributes().getNamedItem("class");
+					if (c!=null)
+						tag += c.toString()+ " ";
+					tag += foundAttribute.toString();
+					//System.out.println("tag: " + tag);
+					jsInTag.add(tag);
+					//System.out.println("jsInTag.size(): " + jsInTag.size());
 				}
 
 

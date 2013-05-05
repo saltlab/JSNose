@@ -1083,7 +1083,7 @@ public class Crawler implements Runnable {
 			ArrayList<StateVertix> notFullExpandedStates = sfg.getNotFullExpandedStates();
 
 			// setting the crawl strategy
-			CrawlStrategy strategy = CrawlStrategy.Div;
+			CrawlStrategy strategy = CrawlStrategy.BFS;
 
 			// choose next state to crawl based on the strategy
 			StateVertix nextToCrawl = nextStateToCrawl(strategy);

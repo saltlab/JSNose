@@ -71,9 +71,10 @@ public class SmellDetector {
 	private static HashSet<SmellLocation> closureSmellLocation = new HashSet<SmellLocation>();	// keeping line number of the inner function of a deep closure
 	private static HashSet<SmellLocation> nestedCallBackFound = new HashSet<SmellLocation>();	// keeping line number of the inner function of a deep closure
 
-	private static int inlineJavaScriptLines = 0;
+	private static int inlineJavaScriptLines = 0;	// keep the count of js code in <script> tags
 	private static HashSet<String> inlineJavaScriptScopeName = new HashSet<String>();	// keeping scope name (js file name) where inline JavaScript is detected
-	private static int NumberOfInTagJS = 0; 
+	private static int NumberOfInTagJS1 = 0; 
+	private static HashSet<String> jsInTagFound = new HashSet<String>();			// keeping occurrences of unique js in html tags
 	private static HashSet<SmellLocation> CSSinJS = new HashSet<SmellLocation>();	// keeping line number where CSS is used in JS
 		
 	
@@ -155,6 +156,25 @@ public class SmellDetector {
 		System.out.println("***************************************");
 
 		analyseObjecsList();
+
+		System.out.println("********** CLOSURE SMELL **********");
+		reportSmell(closureSmellLocation);
+
+		
+		System.out.println("********** COUPLING JS/HTML **********");
+		
+		System.out.println("Total number of JavaScript in HTML tags: " + jsInTagFound.size());
+		
+		for (String jTag: jsInTagFound)
+			System.out.println(jTag);
+		
+		System.out.println("Occurance of CSS in JavaScript");
+		reportSmell(CSSinJS);
+		
+		//System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
+		//for (String sn: inlineJavaScriptScopeName)
+		//	System.out.println("Scope having the inline JavaScript: " + sn);
+
 		
 		System.out.println("********** EMPTY CATCH **********");
 		reportSmell(emptyCatchFound);
@@ -181,31 +201,20 @@ public class SmellDetector {
 		System.out.println("********** LONG PARAMETER LIST **********");
 		reportSmell(longParameterListFound);
 
+		//System.out.println("********** LONG PROTOTYPE CHAIN **********");
+		//reportSmell(longPrototypeChainObjLocation);
+
+		
+		// More detection process for callback is to dynamically check if the type of a parameter is function
+		System.out.println("********** NESTED CALLBACK **********");
+		reportSmell(nestedCallBackFound);
+
 		System.out.println("********** REFUSED BEQUEST **********");
 		reportSmell(refusedBequestObjLocation);
 		
 		System.out.println("********** SWITCH STATEMENT **********");
 		reportSmell(switchFound);
-		
-		System.out.println("********** COUPLING JS/HTML **********");
-		
-		System.out.println("Total number of JavaScript in HTML tags: " + NumberOfInTagJS);
-		System.out.println("Occurance of CSS in JavaScript");
-		reportSmell(CSSinJS);
-		
-		//System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
-		//for (String sn: inlineJavaScriptScopeName)
-		//	System.out.println("Scope having the inline JavaScript: " + sn);
-		
-		System.out.println("********** CLOSURE SMELL **********");
-		reportSmell(closureSmellLocation);
-
-		System.out.println("********** LONG PROTOTYPE CHAIN **********");
-		reportSmell(longPrototypeChainObjLocation);
-
-		// More detection process for callback is to dynamically check if the type of a parameter is function
-		System.out.println("********** NESTED CALLBACK **********");
-		reportSmell(nestedCallBackFound);
+				
 
 		System.out.println("********** UNREACHABLE CODE **********");
 		reportSmell(unReachable);
@@ -1109,14 +1118,14 @@ public class SmellDetector {
 	 * TODO: distinguish between server-side generated codes and original inline codes
 	 * 
 	 */
-	public static void analyseCoupling(String scopeName, String code, HashSet<Node> eventList) {
+	public static void analyseCoupling(String scopeName, String code, HashSet<String> jsInTag) {
 		// counting lines of inline javascript 
 		String[] lines = code.split("\r\n|\r|\n");
 		//System.out.println("There are " + lines.length + " lines of JavaScript code inside your HTML");
 		//System.out.println("code is: " + code);
 		
-		//System.out.println("eventList: " + eventList);
-		NumberOfInTagJS = eventList.size(); 
+		for (String jTag: jsInTag)
+			jsInTagFound.add(jTag);
 		
 		if (!inlineJavaScriptScopeName.contains(scopeName)){
 			inlineJavaScriptScopeName.add(scopeName);

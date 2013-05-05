@@ -40,9 +40,9 @@ public final class JSNoseExample {
 	//private static final String URL = "http://localhost/GhostBusters/";  		// GhostBusters
 	//private static final String URL = "http://localhost:8080/tudu-dwr/";   	// TuduList
 	//private static final String URL = "http://127.0.0.1:8081/fractal_viewer/fractal_viewer/";  //FractalViewer
-	//private static final String URL = "http://127.0.0.1:8081/phormer331/admin.php"; // PhotoGallery
+	private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
 	//private static final String URL = "http://127.0.0.1:8081/TinySiteXml/";  // Small Ajax site
-	private static final String URL = "http://127.0.0.1:8081/ajaxfilemanagerv_tinymce1.1/tinymce_test.php";  // TinyMCE
+	//private static final String URL = "http://127.0.0.1:8081/ajaxfilemanagerv_tinymce1.1/tinymce_test.php";  // TinyMCE
 
 	
 

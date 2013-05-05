@@ -2,6 +2,8 @@ package codesmells;
 
 import java.util.ArrayList;
 
+import codesmells.SmellDetector.SmellLocation;
+
 public class JavaScriptObjectInfo {
 	private String name = "";
 	private String type = "";
@@ -132,4 +134,24 @@ public class JavaScriptObjectInfo {
 	public void setJsFileName(String jsFileName) {
 		this.jsFileName = jsFileName;
 	}
+	
+
+	@Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JavaScriptObjectInfo)) return false;
+
+        JavaScriptObjectInfo jso = (JavaScriptObjectInfo) o;
+
+        if (!jso.getName().equals(this.getName())) {  
+            return false;  
+        } 
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return 1;
+    }
+	
 }

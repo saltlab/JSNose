@@ -171,7 +171,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 		excludeFilenamePatterns.add(".*scriptaculous.js");
 		excludeFilenamePatterns.add(".*slider.js");
 		excludeFilenamePatterns.add(".*unittest.js");
-	//	excludeFilenamePatterns.add(".*engine.js");
+		excludeFilenamePatterns.add(".*engine.js");
 		excludeFilenamePatterns.add(".*util.js");
 		
 		//exclude for collegesvis
@@ -190,13 +190,6 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	
 
 	private boolean shouldModify(String name) {
-//		if (name.equals("http://127.0.0.1:8081/dragable-boxes/js/dragable-boxes.js") || 
-//				name.equals("http://127.0.0.1:8081/dragable-boxes/js/ajax.js")){
-//			LOGGER.info("Modifying response for " + name);
-//			return true;
-//		}
-		
-		
 		/* try all patterns and if 1 matches, return false */
 		for (String pattern : excludeFilenamePatterns) {
 			if (name.matches(pattern)) {
@@ -231,7 +224,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			
 			SmellDetector.setJSName(jsName);
 
-			
+	
 			/**
 			 * Analysing inline javascript smell
 			 */

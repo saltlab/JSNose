@@ -274,7 +274,9 @@ public class SmellDetector {
 			//System.out.println("ownPropetries of :" + jso.getName() + " is: " + ownPropetries);
 			
 			
-			if (!objectsToIgnore.contains(jso.getName()) && !jso.getPrototype().equals("Date") && !jso.getPrototype().equals("XMLHttpRequest")){
+			if (!objectsToIgnore.contains(jso.getName()) && !jso.getPrototype().equals("Array") 
+					&& !jso.getPrototype().equals("Date") && !jso.getPrototype().equals("XMLHttpRequest") && !jso.getPrototype().equals("ActiveXObject")){
+				
 				/**
 				 * Detecting lazy object
 				 */
@@ -458,17 +460,18 @@ public class SmellDetector {
 		}
 
 		
-//		if (ASTNodeName.equals("Name")){
-//			//System.out.println(ASTNode.debugPrint());
-//
-//			for (Symbol s: ASTNode.getAstRoot().getSymbols()){
-//				int sType = s.getDeclType();
-//			    if (sType == Token.LP || sType == Token.VAR || sType == Token.LET || sType == Token.CONST){
-//			    	System.out.println("s.getName() : " + s.getName());
-//			    }
-//			}
-//			System.out.println();
-//		}
+		if (ASTNodeName.equals("Name")){
+			//System.out.println(ASTNode.debugPrint());
+
+			for (Symbol s: ASTNode.getAstRoot().getSymbols()){
+				int sType = s.getDeclType();
+			    if (sType == Token.LP || sType == Token.VAR || sType == Token.LET || sType == Token.CONST){
+			    	//System.out.println("global detected: " + s.getName());
+			    	globals.add(s.getName());
+			    }
+			}
+			//System.out.println();
+		}
 //		else if (ASTNodeName.equals("FunctionNode")){
 //			FunctionNode f = (FunctionNode) ASTNode;
 //			for (Symbol s: f.getSymbols()){
@@ -480,10 +483,7 @@ public class SmellDetector {
 //			
 //			System.out.println(f.getSymbolTable());
 //			System.out.println(f.getSymbols());
-//
-//		}else
-//			return;
-        
+//		}        
 		
 		
 		
@@ -632,7 +632,7 @@ public class SmellDetector {
 				// checking css in javascript 
 				if (((Name)ASTNode).getIdentifier().equals("style")){
 					SmellLocation sl = new SmellLocation("CSS in JavaScript", jsFileName,(ASTNode.getLineno()+1));
-					System.out.println("CSSinJS : at line " + (ASTNode.getLineno()+1) + " of file: " + jsFileName);
+					//System.out.println("CSSinJS : at line " + (ASTNode.getLineno()+1) + " of file: " + jsFileName);
 					CSSinJS.add(sl);
 				}else if (jsObjects.size()>0){
 
@@ -753,7 +753,8 @@ public class SmellDetector {
 			}
 		}
 				
-		jsObjects.add(newJSObj);
+		if (!objectExists(newJSObj))
+			jsObjects.add(newJSObj);
 		currentObjectIndex = jsObjects.size()-1;	// current object is now at the end of jsObjects list
 		currentObjectNodeDepth = ASTNode.depth();	// setting current object node depth
 		//System.out.println("Object literal: " + candidateObjectName);
@@ -1071,10 +1072,11 @@ public class SmellDetector {
 
 		dynamicObject.setJsFileName(jsFileName);
 		// add the new dynamic object to the list
-		jsObjects.add(dynamicObject);
+		if (!objectExists(dynamicObject))
+			jsObjects.add(dynamicObject);
 	}
 
-	public boolean objectExists(JavaScriptObjectInfo jsObject){
+	public static boolean objectExists(JavaScriptObjectInfo jsObject){
 		for (JavaScriptObjectInfo o: jsObjects)
 			if (o.getName().equals(jsObject.getName())){
 				//System.out.println("object " + jsObject.getName() + " already exist!");

@@ -305,7 +305,6 @@ public class Crawler implements Runnable {
 
 			if (this.fireEvent(clickable)) {
 
-				// TODO ali, do not increase depth if eventable is from guidedcrawling
 				depth++;
 
 				/**
@@ -344,170 +343,9 @@ public class Crawler implements Runnable {
 
 
 
-
-		/**
-		 * Dynamic extraction of javaScript objects and properties in browser 
-		 */
-
 		// getCoverage should be set true for dead unused/code detection
 		boolean getCoverage = true;
-
-		/**
-		 * Fetching list of globals dynamically at runtime
-		 */
-		try{
-			Object globals =  this.browser.executeJavaScript("" +
-					"var ownPropertiesArray = []; " +
-					"for (var property in window){" +
-					"if (window.hasOwnProperty(property)){" +
-					"ownPropertiesArray.push(property); " +
-					"}" +
-					"} " +
-					" return ownPropertiesArray;");
-			ArrayList globalVars = (ArrayList) globals;
-			HashSet<String> globalsVarList = new HashSet<String>();	// keeping global variables
-			Object acceptable = null;
-			for (int i=0;i<globalVars.size();i++){
-				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")  
-						&& !globalVars.get(i).equals("top")  && !globalVars.get(i).equals("navigator")
-						&& !globalVars.get(i).equals("location")  && !globalVars.get(i).equals("InstallTrigger")
-						&& !globalVars.get(i).equals("fxdriver_id")  && !globalVars.get(i).equals("__fxdriver_unwrapped")
-						&& !((String)globalVars.get(i)).contains("exec_counter")){
-
-					acceptable =  this.browser.executeJavaScript("if (typeof " + globalVars.get(i) + " !== 'function') return true; else return false;");
-					if (acceptable.toString().equals("true")){
-						globalsVarList.add(globalVars.get(i).toString());
-
-					}
-				}
-			}
-			System.out.println("********** RUNTIME GLOBALS DETECTION **********");
-			System.out.println("Total number of global variables: " + globalsVarList.size());
-			System.out.println("Globals are: " + globalsVarList);
-
-			// send the list to the smell detector main class
-			SmellDetector.setGlobals(globalsVarList);
-
-		}catch (Exception e) {
-			LOGGER.info("Could not execute script");
-		}
-
-
-
-
-		ArrayList<JavaScriptObjectInfo> jsObjects = new ArrayList<JavaScriptObjectInfo>();
-		for (String candidateJSObject : SmellDetector.getcandidateJSObjectList()){
-			try{
-
-				if (!candidateJSObject.equals("window") && !candidateJSObject.equals("document")  
-						&& !candidateJSObject.equals("top")  && !candidateJSObject.equals("navigator")
-						&& !candidateJSObject.equals("location")  && !candidateJSObject.equals("InstallTrigger")
-						&& !candidateJSObject.equals("fxdriver_id")  && !candidateJSObject.equals("__fxdriver_unwrapped")
-						&& !candidateJSObject.contains("exec_counter")){
-
-
-					Object isObject =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"object\") return true;");
-					Object isFunction =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"function\") return true;");
-
-					//System.out.println(isObject + " "+candidateJSObject);
-					if (isObject!=null && isObject.toString().equals("true")){
-						//System.out.println(candidateJSObject + " is an object!");
-
-						JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0,-1);
-
-						//Adding properties and prototype to the newJSObj
-
-						Object ownPropertiesArray =  this.browser.executeJavaScript("" +
-								"var ownPropertiesArray = []; " +
-								"for (var property in " + candidateJSObject + "){" +
-								"if (" + candidateJSObject + ".hasOwnProperty(property)){" +
-								"ownPropertiesArray.push(property); " +
-								"}" +
-								"} " +
-								" return ownPropertiesArray;");
-
-						Object inheritedPropertiesArray =  this.browser.executeJavaScript("" +
-								"var inheritedPropertiesArray = []; " +
-								"for (var property in " + candidateJSObject + "){" +
-								"if (!" + candidateJSObject + ".hasOwnProperty(property)){" +
-								"inheritedPropertiesArray.push(property); " +
-								"}" +
-								"} " +
-								" return inheritedPropertiesArray;");
-
-
-						//System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
-						//System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
-
-						ArrayList ownProperties = (ArrayList) ownPropertiesArray;
-						ArrayList inheritedProperties = (ArrayList) inheritedPropertiesArray;
-
-
-						for (int i=0;i<ownProperties.size();i++){
-							//System.out.println((String)ownProperties.get(i).toString());
-							newJSObj.addOwnProperty((String)ownProperties.get(i).toString());
-						}
-
-						for (int i=0;i<inheritedProperties.size();i++){
-							//System.out.println((String)inheritedProperties.get(i).toString());
-							newJSObj.addInheritedPropetries((String)inheritedProperties.get(i).toString());
-						}
-
-
-						SmellDetector.addDynamicObject(newJSObj);
-
-
-
-
-						if (ownProperties.size() < SmellDetector.MIN_OBJECT_PROPERTIES){
-							System.out.println("********** RUNTIME LAZY DETECTION **********");
-							System.out.println("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
-							if (!lazyObjects.contains(newJSObj))		// add the new object if does not already exist
-								lazyObjects.add(newJSObj);
-
-						}
-						if (ownProperties.size() > SmellDetector.MAX_OBJECT_PROPERTIES){
-							System.out.println("********** RUNTIME LARGE DETECTION **********");
-							System.out.println("Large object: " + candidateJSObject + " with properties:" + ownProperties);
-							if (!largeObjects.contains(newJSObj))		// add the new object if does not already exist
-								largeObjects.add(newJSObj);
-						}
-
-					}
-
-
-
-					//Adding prototype chain to the newJSObj
-					//Object prototype =  this.browser.executeJavaScript("return Object.getPrototypeOf(" + candidateJSObject + ");");
-					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
-
-					//prototype =  this.browser.executeJavaScript("" +
-					//		" return Object.getPrototypeOf(" + candidateJSObject + ");");
-					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
-
-
-					//Object prototypeChain =  this.browser.executeJavaScript("" +
-					//		"var prototypeChainArray = []; " +
-					//		"prototypeChainIterator = " + candidateJSObject + ";" +
-					//		"while (prototypeChainIterator != null) {" +
-					//		    "prototypeChainIterator = Object.getPrototypeOf(prototypeChainIterator);"+
-					//		    "prototypeChainArray.push(prototypeChainIterator);"+
-					//		"}"+
-					//		" return prototypeChainArray;");
-					//System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
-
-
-					//System.out.println();
-
-				}
-			}catch (Exception e) {
-				LOGGER.info("Could not execute script");
-			}
-		}
-
-
-
-
+		
 		if (this.fireEvent(eventable)) {
 			StateVertix newState =
 					new StateVertix(getBrowser().getCurrentUrl(), controller.getSession()
@@ -699,6 +537,9 @@ public class Crawler implements Runnable {
 			return false;
 		}
 
+		// Amin: JSNose dynamic analysis
+		dynamicSmellAnalysis();
+		
 		// Store the currentState to be able to 'back-track' later.
 		StateVertix orrigionalState = this.getStateMachine().getCurrentState();
 
@@ -1022,6 +863,9 @@ public class Crawler implements Runnable {
 			if (!checkConstraints()) {
 				return false;
 			}
+			
+			// Amin: JSNod dynamic analysis
+			dynamicSmellAnalysis();
 
 			// Store the currentState to be able to 'back-track' later.
 			System.out.println("orrigionalState is " + orrigionalState.getName());
@@ -1163,6 +1007,163 @@ public class Crawler implements Runnable {
 			}
 
 			orrigionalState = this.getStateMachine().getCurrentState();
+		}
+	}
+
+	
+	
+	/**
+	 * Dynamic extraction of javaScript globals, objects and properties in browser 
+	 */
+	private void dynamicSmellAnalysis() {
+		try{
+			Object globals =  this.browser.executeJavaScript("" +
+					"var ownPropertiesArray = []; " +
+					"for (var property in window){" +
+					"if (window.hasOwnProperty(property)){" +
+					"ownPropertiesArray.push(property); " +
+					"}" +
+					"} " +
+					" return ownPropertiesArray;");
+			ArrayList globalVars = (ArrayList) globals;
+			HashSet<String> globalsVarList = new HashSet<String>();	// keeping global variables
+			Object acceptable = null;
+			for (int i=0;i<globalVars.size();i++){
+				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")  
+						&& !globalVars.get(i).equals("top")  && !globalVars.get(i).equals("navigator")
+						&& !globalVars.get(i).equals("location")  && !globalVars.get(i).equals("InstallTrigger")
+						&& !globalVars.get(i).equals("fxdriver_id")  && !globalVars.get(i).equals("__fxdriver_unwrapped")
+						&& !((String)globalVars.get(i)).contains("exec_counter")){
+
+					acceptable =  this.browser.executeJavaScript("if (typeof " + globalVars.get(i) + " !== 'function') return true; else return false;");
+					if (acceptable.toString().equals("true")){
+						globalsVarList.add(globalVars.get(i).toString());
+
+					}
+				}
+			}
+			System.out.println("********** RUNTIME GLOBALS DETECTION **********");
+			System.out.println("Total number of global variables: " + globalsVarList.size());
+			System.out.println("Globals are: " + globalsVarList);
+
+			// send the list to the smell detector main class
+			SmellDetector.setGlobals(globalsVarList);
+
+		}catch (Exception e) {
+			LOGGER.info("Could not execute script");
+		}
+
+
+
+
+		ArrayList<JavaScriptObjectInfo> jsObjects = new ArrayList<JavaScriptObjectInfo>();
+		for (String candidateJSObject : SmellDetector.getcandidateJSObjectList()){
+			try{
+
+				if (!candidateJSObject.equals("window") && !candidateJSObject.equals("document")  
+						&& !candidateJSObject.equals("top")  && !candidateJSObject.equals("navigator")
+						&& !candidateJSObject.equals("location")  && !candidateJSObject.equals("InstallTrigger")
+						&& !candidateJSObject.equals("fxdriver_id")  && !candidateJSObject.equals("__fxdriver_unwrapped")
+						&& !candidateJSObject.contains("exec_counter")){
+
+
+					Object isObject =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"object\") return true;");
+					Object isFunction =  this.browser.executeJavaScript("if (typeof " + candidateJSObject + " == \"function\") return true;");
+
+					//System.out.println(isObject + " "+candidateJSObject);
+					if (isObject!=null && isObject.toString().equals("true")){
+						//System.out.println(candidateJSObject + " is an object!");
+
+						JavaScriptObjectInfo newJSObj = new JavaScriptObjectInfo(candidateJSObject,0,-1);
+
+						//Adding properties and prototype to the newJSObj
+
+						Object ownPropertiesArray =  this.browser.executeJavaScript("" +
+								"var ownPropertiesArray = []; " +
+								"for (var property in " + candidateJSObject + "){" +
+								"if (" + candidateJSObject + ".hasOwnProperty(property)){" +
+								"ownPropertiesArray.push(property); " +
+								"}" +
+								"} " +
+								" return ownPropertiesArray;");
+
+						Object inheritedPropertiesArray =  this.browser.executeJavaScript("" +
+								"var inheritedPropertiesArray = []; " +
+								"for (var property in " + candidateJSObject + "){" +
+								"if (!" + candidateJSObject + ".hasOwnProperty(property)){" +
+								"inheritedPropertiesArray.push(property); " +
+								"}" +
+								"} " +
+								" return inheritedPropertiesArray;");
+
+
+						//System.out.println("ownProperties of " + candidateJSObject + " are " + ownPropertiesArray);
+						//System.out.println("inheritedProperties of " + candidateJSObject + " are " + inheritedPropertiesArray);
+
+						ArrayList ownProperties = (ArrayList) ownPropertiesArray;
+						ArrayList inheritedProperties = (ArrayList) inheritedPropertiesArray;
+
+
+						for (int i=0;i<ownProperties.size();i++){
+							//System.out.println((String)ownProperties.get(i).toString());
+							newJSObj.addOwnProperty((String)ownProperties.get(i).toString());
+						}
+
+						for (int i=0;i<inheritedProperties.size();i++){
+							//System.out.println((String)inheritedProperties.get(i).toString());
+							newJSObj.addInheritedPropetries((String)inheritedProperties.get(i).toString());
+						}
+
+
+						SmellDetector.addDynamicObject(newJSObj);
+
+
+
+
+						if (ownProperties.size() < SmellDetector.MIN_OBJECT_PROPERTIES){
+							System.out.println("********** RUNTIME LAZY DETECTION **********");
+							System.out.println("Lazy object: " + candidateJSObject + " with properties:" + ownProperties);
+							if (!lazyObjects.contains(newJSObj))		// add the new object if does not already exist
+								lazyObjects.add(newJSObj);
+
+						}
+						if (ownProperties.size() > SmellDetector.MAX_OBJECT_PROPERTIES){
+							System.out.println("********** RUNTIME LARGE DETECTION **********");
+							System.out.println("Large object: " + candidateJSObject + " with properties:" + ownProperties);
+							if (!largeObjects.contains(newJSObj))		// add the new object if does not already exist
+								largeObjects.add(newJSObj);
+						}
+
+					}
+
+
+
+					//Adding prototype chain to the newJSObj
+					//Object prototype =  this.browser.executeJavaScript("return Object.getPrototypeOf(" + candidateJSObject + ");");
+					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+
+					//prototype =  this.browser.executeJavaScript("" +
+					//		" return Object.getPrototypeOf(" + candidateJSObject + ");");
+					//System.out.println("Object.getPrototypeOf " + candidateJSObject + " is " + prototype);
+
+
+					//Object prototypeChain =  this.browser.executeJavaScript("" +
+					//		"var prototypeChainArray = []; " +
+					//		"prototypeChainIterator = " + candidateJSObject + ";" +
+					//		"while (prototypeChainIterator != null) {" +
+					//		    "prototypeChainIterator = Object.getPrototypeOf(prototypeChainIterator);"+
+					//		    "prototypeChainArray.push(prototypeChainIterator);"+
+					//		"}"+
+					//		" return prototypeChainArray;");
+					//System.out.println("prototypeChain of " + candidateJSObject + " is " + prototypeChain);
+
+
+					//System.out.println();
+
+				}
+			}catch (Exception e) {
+				LOGGER.info("Could not execute script");
+			}
 		}
 	}
 

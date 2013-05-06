@@ -321,9 +321,9 @@ public class SmellDetector {
 				}
 
 			prototype = jso.getPrototype();
-			if (prototype!=""){
+			if (prototype!="" && !prototype.equals("Function") && !prototype.equals("Date")){
 
-				//System.out.println("prototype of :" + jso.getName() + " is: " + prototype);
+				System.out.println("prototype of :" + jso.getName() + " is: " + prototype);
 
 				for (JavaScriptObjectInfo proto : jsObjects)
 					if (proto.getName().equals(prototype)){
@@ -333,7 +333,7 @@ public class SmellDetector {
 						inheritedPropetries = proto.getOwnPropetries();
 
 						jso.setInheritedPropetries(inheritedPropetries);
-						//System.out.println("inheritedPropetries of :" + jso.getName() + " is: " + jso.getInheritedPropetries());
+						System.out.println("inheritedPropetries of :" + jso.getName() + " is: " + jso.getInheritedPropetries());
 
 
 						for (String prop : inheritedPropetries){
@@ -346,7 +346,7 @@ public class SmellDetector {
 						jso.setUsedInheritedPropetries(usedInheritedPropetries);
 						jso.setNotUsedInheritedPropetries(notUsedInheritedPropetries);
 
-						//System.out.println("usedInheritedPropetries of :" + jso.getName() + " is: " + jso.getUsedInheritedPropetries());
+						System.out.println("usedInheritedPropetries of :" + jso.getName() + " is: " + jso.getUsedInheritedPropetries());
 
 						//System.out.println("notUsedInheritedPropetries of :" + jso.getName() + " is: " + jso.getNotUsedInheritedPropetries());
 
@@ -357,7 +357,7 @@ public class SmellDetector {
 						 */
 						if (!objectsToIgnore.contains(jso.getName())){
 							if ( (double)usedInheritedPropetries.size() / (double)inheritedPropetries.size() < BASE_CLASS_USAGE_RATIO){
-								//System.out.println("Detected refused bequest for object: " + jso.getName());
+								System.out.println("Detected refused bequest for object: " + jso.getName());
 								sl = new SmellLocation(jso.getName(),jso.getJsFileName(),jso.getLineNumber());
 								refusedBequestObjLocation.add(sl);
 							}

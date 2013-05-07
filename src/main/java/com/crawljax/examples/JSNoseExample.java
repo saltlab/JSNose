@@ -10,6 +10,7 @@ import com.crawljax.core.configuration.CrawljaxConfiguration;
 import com.crawljax.core.configuration.InputSpecification;
 import com.crawljax.core.configuration.ProxyConfiguration;
 import com.crawljax.core.configuration.ThreadConfiguration;
+import com.crawljax.plugins.aji.JSASTModifier;
 import com.crawljax.plugins.aji.JSModifyProxyPlugin;
 import com.crawljax.plugins.aji.executiontracer.AstInstrumenter;
 import com.crawljax.plugins.webscarabwrapper.WebScarabWrapper;
@@ -38,16 +39,15 @@ public final class JSNoseExample {
 	//private static final String URL = "http://localhost/Symbolistic/";  		// Symbolistic
 	//private static final String URL = "http://localhost/Tunnel/";  			// Tunnel
 	//private static final String URL = "http://localhost/GhostBusters/";  		// GhostBusters
-	private static final String URL = "http://localhost:8080/tudu-dwr/";   	// TuduList
+	//private static final String URL = "http://localhost:8080/tudu-dwr/";   	// TuduList
 	//private static final String URL = "http://127.0.0.1:8081/fractal_viewer/fractal_viewer/";  //FractalViewer
-	//private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
+	private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
 	//private static final String URL = "http://127.0.0.1:8081/TinySiteXml/";  // Small Ajax site
 	//private static final String URL = "http://127.0.0.1:8081/ajaxfilemanagerv_tinymce1.1/tinymce_test.php";  // TinyMCE
+	
 
-	
-	
 	private static final int MAX_NUMBER_STATES = 10000;
-	private static final int MAX_RUNTIME = 300;
+	private static final int MAX_RUNTIME = 600;
 	private static final int MAX_DEPTH = 0; // this indicates no depth-limit
 
 	
@@ -64,7 +64,7 @@ public final class JSNoseExample {
 	//private static final String URL = "http://localhost/ria/"; // from http://ssrg.eecs.uottawa.ca/TestRIA/
 
 	private JSNoseExample() {
-
+		JSASTModifier.innstrumentForCoverage(URL);
 	}
 
 	private static CrawljaxConfiguration getCrawljaxConfiguration() {

@@ -20,6 +20,8 @@
 */
 package com.crawljax.plugins.aji;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -69,8 +71,6 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	
 	private boolean htmlFound = false;
 		
-	private int rootCounter = 0;
-
 	// Amin: this is needed for retrieving the corresponding array
 	private static List<String> modifiedJS;
 	
@@ -80,17 +80,13 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	private HashSet<String> jsInTag = new HashSet<String>();
 	private boolean foundTagsWithJS = false;
 	
-	
-	private EmbeddedBrowser browser;
-
+	private FileWriter fstream;
+	private BufferedWriter out;
 	
 	public static List<String> getModifiedJSList(){
 		return modifiedJS;
 	}
 	
-
-
-
 	
 	/**
 	 * Construct without patterns.
@@ -133,17 +129,6 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 	 * </ul>
 	 */
 	public void excludeDefaults() {
-		/*excludeFilenamePatterns.add(".*jquery[-0-9.]*.js?.*");
-		excludeFilenamePatterns.add(".*prototype.*js?.*");
-		excludeFilenamePatterns.add(".*scriptaculous.*.js?.*");
-		excludeFilenamePatterns.add(".*mootools.js?.*");
-		excludeFilenamePatterns.add(".*dojo.xd.js?.*");
-		excludeFilenamePatterns.add(".*yuiloader.js?.*");
-		excludeFilenamePatterns.add(".*google.*");
-		excludeFilenamePatterns.add(".*min.*.js?.*");
-		excludeFilenamePatterns.add(".*pack.*.js?.*");
-		excludeFilenamePatterns.add(".*compressed.*.js?.*");
-		*/
 		
 		excludeFilenamePatterns.add(".*jquery[-0-9.]*.js?.*");
 		excludeFilenamePatterns.add(".*jquery.*.js?.*");
@@ -292,7 +277,6 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 
 			modifier.start();
 
-			//System.out.println("printing ast " + ast.toSource());
 
 //			System.out.println("PRINTING AST ROOT");
 //			for (Symbol s: ast.getSymbols()){
@@ -310,6 +294,26 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			SmellDetector.generateReport();
 			
 
+			/*
+			 *  Printing the instrumented code to a file
+			 */
+			try {
+				//System.out.println("printing ast " + ast.toSource());
+				File file = new File(jsName + ".txt");
+				if (!file.exists()) {
+					file.createNewFile();
+				}
+
+				FileOutputStream fop = new FileOutputStream(file);
+
+				fop.write(ast.toSource().getBytes());
+				fop.flush();
+				fop.close();
+			}
+			catch (IOException ioe) {
+				LOGGER.info("Could not write the instrumented file into disk!");
+			}
+
 
 			//if (htmlFound == true) {
 			modifier.finish(ast);
@@ -325,10 +329,7 @@ public class JSModifyProxyPlugin extends ProxyPlugin {
 			/* clean up */
 			Context.exit();
 			
-			
-			//System.out.println("**** " + modifier.getJSName() + " AST AFTER : ");
-			//System.out.println(ast.toSource());
-			
+						
 			return ast.toSource();
 		} catch (RhinoException re) {
 			System.err.println(re.getMessage());

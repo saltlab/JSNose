@@ -35,6 +35,7 @@ import org.mozilla.javascript.ast.*;
 import codesmells.SmellDetector;
 
 import com.crawljax.core.CrawljaxController;
+import com.crawljax.examples.JSNoseExample;
 import com.crawljax.plugins.aji.executiontracer.ProgramPoint;
 import com.crawljax.util.Tree;
 import com.crawljax.util.TreeNode;
@@ -65,7 +66,7 @@ public abstract class JSASTModifier implements NodeVisitor {
 	/**
 	 * Contains the scopename of the AST we are visiting. Generally this will be the filename
 	 */
-	private String scopeName = null;
+	private static String scopeName = null;
 
 	//Added by Amin to store js corresponding name
 	protected String jsName = null;
@@ -269,8 +270,18 @@ public abstract class JSASTModifier implements NodeVisitor {
 
 	
 	
+	public static boolean innstrumentForCoverage(String URL) {		
+		if (!URL.equals("http://127.0.0.1:8081/phormer331/"))
+			if (scopeName.matches(".*min.*.js?.*")) {	// skip the code coverage for admin files
+				//System.out.println("Not instrumenting the code " + scopeName + "for coverage");
+				return false;
+			}
+		return true;
+	}
+	
+	
 	/**
-	 * JSNose version: AST node visiting method to detect code smells
+	 * JSNose version: AST actual node visiting method to detect code smells
 	 * 
 	 * @param node
 	 *            The node that is currently visited.
@@ -281,8 +292,9 @@ public abstract class JSASTModifier implements NodeVisitor {
 		smellDetector.SetASTNode(node);
 		smellDetector.analyseAstNode();		
 		
-		
-		visit2(node);
+		// check if the file should be considered for coverage analysis
+		if (innstrumentForCoverage(scopeName)==true)
+			visitAndInstrument(node);
 		
 		//TreeNode<String> n = new TreeNode<String>();
 		//n.setData(node.shortName());
@@ -298,14 +310,14 @@ public abstract class JSASTModifier implements NodeVisitor {
 	
 	
 	/**
-	 * Actual visiting method.
+	 * Visiting and instrumenting the code
 	 * 
 	 * @param node
 	 *            The node that is currently visited.
 	 * @return Whether to visit the children.
 	 */
 	//@Override
-	public boolean visit2(AstNode node) {
+	public boolean visitAndInstrument(AstNode node) {
 		
 		FunctionNode func;
 		

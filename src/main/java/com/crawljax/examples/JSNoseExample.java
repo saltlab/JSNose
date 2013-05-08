@@ -41,8 +41,8 @@ public final class JSNoseExample {
 	//private static final String URL = "http://localhost/GhostBusters/";  		// GhostBusters
 	//private static final String URL = "http://localhost:8080/tudu-dwr/";   	// TuduList
 	//private static final String URL = "http://127.0.0.1:8081/fractal_viewer/fractal_viewer/";  //FractalViewer
-	private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
-	//private static final String URL = "http://127.0.0.1:8081/TinySiteXml/";  // Small Ajax site
+	//private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
+	private static final String URL = "http://127.0.0.1:8081/TinySiteXml/";  // Small Ajax site
 	//private static final String URL = "http://127.0.0.1:8081/ajaxfilemanagerv_tinymce1.1/tinymce_test.php";  // TinyMCE
 	
 
@@ -111,16 +111,14 @@ public final class JSNoseExample {
 		}
 
 	
-		if (!URL.equals("http://localhost:8080/tudu-dwr/")){
-			// default order of clicks on candidate clickable
-			crawler.clickDefaultElements();
-			crawler.click("a");
-			crawler.click("div");
-			crawler.click("span");
-			crawler.click("img");
-			crawler.click("input").withAttribute("type", "submit");
-			crawler.click("td");
-		}else{
+		if (URL.equals("http://localhost/Tunnel/")){
+			crawler.click("p").withAttribute("id", "welcome");
+		}
+		else if (URL.equals("http://localhost/GhostBusters/")){
+			crawler.click("div").withAttribute("data-m", "%").withAttribute("id", "g%");
+			crawler.dontClick("div").withAttribute("id", "end").withAttribute("backgroundColor", "#fff");
+			
+		}else if (URL.equals("http://localhost:8080/tudu-dwr/")){
 			// this is just for the TuduList application
 			Form form=new Form();
 			Form addList=new Form();
@@ -147,8 +145,17 @@ public final class JSNoseExample {
 			crawler.dontClick("a").withAttribute("title", "My info");
 			crawler.dontClick("a").withAttribute("title", "Log out");
 			crawler.dontClick("a").withAttribute("text", "Cancel");
+		}else{
+			// default order of clicks on candidate clickable
+			crawler.clickDefaultElements();
+			crawler.click("a");
+			crawler.click("div");
+			crawler.click("span");
+			crawler.click("img");
+			crawler.click("button");
+			crawler.click("input").withAttribute("type", "submit");
+			crawler.click("td");
 		}
-
 
 		// except these
 		crawler.dontClick("a").underXPath("//DIV[@id='guser']");

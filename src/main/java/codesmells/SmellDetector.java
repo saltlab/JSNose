@@ -1,5 +1,8 @@
 package codesmells;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -148,9 +151,8 @@ public class SmellDetector {
 	/**
 	 * Showing list of smells when all AST nodes were visited. The method is static to be called in JSModifyProxyPlugin.modifyJS()
 	 */
-	public static void generateReport(){
-
-		// TODO: write in text file
+	public static void generateReport(boolean writeTofile){
+			
 		System.out.println("***************************************");
 		System.out.println("********** CODE SMELL REPORT **********");
 		System.out.println("***************************************");
@@ -229,6 +231,7 @@ public class SmellDetector {
 		//	System.out.println(jsFunctions.get(i).getName());
 		
 	}
+	
 	
 	public static void reportSmell(HashSet<SmellLocation> smell){
 		System.out.println("Number of occurance: " + smell.size());
@@ -1134,6 +1137,112 @@ public class SmellDetector {
 			inlineJavaScriptLines += lines.length;
 		}
 	}
+
+	
+
+	/**
+	 * TODO: Writing final smell report to file
+	 */
+/*	public static void writeReportTofile(){
+
+		try {
+			// printing final report to the report file
+			File file = new File("SmellReport.txt");
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+
+			FileOutputStream fop = new FileOutputStream(file);
+
+			fop.write(ast.toSource().getBytes());
+			fop.flush();
+
+			fop.write("***************************************\n********** CODE SMELL REPORT **********\n***************************************".getBytes());
+
+			analyseObjecsList();
+
+			System.out.println("********** CLOSURE SMELL **********");
+			reportSmell(closureSmellLocation);
+
+
+			System.out.println("********** COUPLING JS/HTML **********");
+
+			System.out.println("Total number of JavaScript in HTML tags: " + jsInTagFound.size());
+
+			for (String jTag: jsInTagFound)
+				System.out.println(jTag);
+
+			System.out.println("Occurance of CSS in JavaScript");
+			reportSmell(CSSinJS);
+
+			//System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
+			//for (String sn: inlineJavaScriptScopeName)
+			//	System.out.println("Scope having the inline JavaScript: " + sn);
+
+
+			System.out.println("********** EMPTY CATCH **********");
+			reportSmell(emptyCatchFound);
+
+			// because globals are extracted at runtime, they are not available in the first execution of this part of code
+			if (globals.size() > 0){
+				System.out.println("********** EXCESSIVE GLOBAL VARIABLES **********");
+				System.out.println("Number of global variables: " + globals.size());
+				System.out.println("List of  global variables: " + globals);
+			}
+
+			System.out.println("********** LARGE OBJECT **********");
+			reportSmell(largeObjectsLocation);		
+
+			System.out.println("********** LAZY OBJECT **********");
+			reportSmell(lazyObjectsLocation);
+
+			System.out.println("********** LONG MESSAGE **********");
+			reportSmell(longMessageFound);
+
+			System.out.println("********** LONG METHOD/FUNCTION **********");
+			reportSmell(longMethodFound);
+
+			System.out.println("********** LONG PARAMETER LIST **********");
+			reportSmell(longParameterListFound);
+
+			//System.out.println("********** LONG PROTOTYPE CHAIN **********");
+			//reportSmell(longPrototypeChainObjLocation);
+
+
+			// More detection process for callback is to dynamically check if the type of a parameter is function
+			System.out.println("********** NESTED CALLBACK **********");
+			reportSmell(nestedCallBackFound);
+
+			System.out.println("********** REFUSED BEQUEST **********");
+			reportSmell(refusedBequestObjLocation);
+
+			System.out.println("********** SWITCH STATEMENT **********");
+			reportSmell(switchFound);
+
+
+			System.out.println("********** UNREACHABLE CODE **********");
+			reportSmell(unReachable);
+
+			fop.close();
+
+
+		}
+		catch (IOException ioe) {
+			System.out.println("Could not write the instrumented file into disk!");
+			}
+
+		}
+		
+	}
+
+	*/
+	
+	
+	
+	
+	
+	
+	
 	
 
 	

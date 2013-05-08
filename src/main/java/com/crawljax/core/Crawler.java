@@ -683,7 +683,7 @@ public class Crawler implements Runnable {
 		SmellDetector.filterObjects(largeObjects, lazyObjects);
 
 		// generate the last report
-		SmellDetector.generateReport();
+		SmellDetector.generateReport(true);
 
 
 		controller.getBrowserPool().freeBrowser(this.getBrowser());

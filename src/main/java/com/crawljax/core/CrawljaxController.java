@@ -180,7 +180,7 @@ public class CrawljaxController implements CrawlQueueManager {
 		this.randomEventExec = config.getCrawlSpecification().isRandomEventExec();
 
 		try {
-			this.fstream = new FileWriter("CodeSmells.txt", true);
+			this.fstream = new FileWriter("coverage.txt", true);
 			this.out = new BufferedWriter(fstream);
 
 		} catch (IOException e) {

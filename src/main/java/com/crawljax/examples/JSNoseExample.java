@@ -25,7 +25,7 @@ import com.crawljax.core.configuration.Form;
  */
 public final class JSNoseExample {
 
-	//Amin settings for ICSM paper
+	//Our settings for the SCAM paper
 	private static boolean doDiverseCrawling = true;	// default should be false
 	private static boolean doEfficientCrawling = false;	// default should be false
 	private static boolean doRandomEventExec = false;   // set it true for randomizing event execution

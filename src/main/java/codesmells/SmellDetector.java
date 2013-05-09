@@ -12,7 +12,7 @@ import org.mozilla.javascript.ast.*;
 import org.w3c.dom.Node;
 
 /**
- * Main JSNose smell detection method
+ * This is the main JSNose smell detection class 
  * 
  * @author Amin Milani Fard
  */
@@ -128,6 +128,10 @@ public class SmellDetector {
 		objectsToIgnore.add("Math");
 		objectsToIgnore.add("location");
 		objectsToIgnore.add("InstallTrigger");
+		objectsToIgnore.add("self");
+		objectsToIgnore.add("parent");
+		objectsToIgnore.add("history");
+		objectsToIgnore.add("screen");
 		objectsToIgnore.add("fxdriver_id");
 		objectsToIgnore.add("__fxdriver_unwrapped");
 		objectsToIgnore.add("jQuery");

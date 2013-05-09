@@ -33,7 +33,7 @@ public final class JSNoseExample {
 	
 	//Final selected experimental objects
 
-	//private static final String URL = "http://127.0.0.1:8081/ptable/";  		// PeriodicTable
+	private static final String URL = "http://127.0.0.1:8081/ptable/";  		// PeriodicTable
 	//private static final String URL = "http://127.0.0.1:8081/collegesvis/";	// collegesvis
 	//private static final String URL = "http://localhost/chess/index.html";	// chessGame
 	//private static final String URL = "http://localhost/Symbolistic/";  		// Symbolistic
@@ -42,7 +42,7 @@ public final class JSNoseExample {
 	//private static final String URL = "http://localhost:8080/tudu-dwr/";   	// TuduList
 	//private static final String URL = "http://127.0.0.1:8081/fractal_viewer/fractal_viewer/";  //FractalViewer
 	//private static final String URL = "http://127.0.0.1:8081/phormer331/"; // PhotoGallery
-	private static final String URL = "http://127.0.0.1:8081/TinySiteXml/";  // Small Ajax site
+	//private static final String URL = "http://127.0.0.1:8081/TinySiteXml/";  // Small Ajax site
 	//private static final String URL = "http://127.0.0.1:8081/ajaxfilemanagerv_tinymce1.1/tinymce_test.php";  // TinyMCE
 	
 

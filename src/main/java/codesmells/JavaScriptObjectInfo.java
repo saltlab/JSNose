@@ -2,8 +2,6 @@ package codesmells;
 
 import java.util.ArrayList;
 
-import codesmells.SmellDetector.SmellLocation;
-
 public class JavaScriptObjectInfo {
 	private String name = "";
 	private String type = "";

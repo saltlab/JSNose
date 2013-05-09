@@ -1,0 +1,140 @@
+script_js_exec_counter[0]++;
+function detailed(id) {
+  script_js_exec_counter[2]++;
+  script_js_exec_counter[4]++;
+  info_x = document.getElementById('the_info');
+  script_js_exec_counter[5]++;
+  info_x.style.display = "block";
+  script_js_exec_counter[6]++;
+  shutter_x = document.getElementById('shutter');
+  script_js_exec_counter[7]++;
+  shutter_x.className = "shutter";
+  script_js_exec_counter[8]++;
+  shutter_x.onclick = hideShutter;
+  script_js_exec_counter[9]++;
+  info_x.className = "info";
+  if (getAJAX.readyState == 4 || getAJAX.readyState == 0) 
+  {
+    script_js_exec_counter[10]++;
+    getAJAX.open("GET", "content/content" + id + ".html", true);
+    script_js_exec_counter[11]++;
+    getAJAX.onreadystatechange = function() {
+  script_js_exec_counter[12]++;
+  if (getAJAX.readyState == 4) {
+    script_js_exec_counter[14]++;
+    info_x.innerHTML = getAJAX.responseText;
+  }
+  script_js_exec_counter[13]++;
+};
+    script_js_exec_counter[15]++;
+    getAJAX.send(null);
+  }
+  script_js_exec_counter[3]++;
+}
+function hideShutter() {
+  script_js_exec_counter[16]++;
+  script_js_exec_counter[18]++;
+  shutter_x = document.getElementById('shutter');
+  script_js_exec_counter[19]++;
+  info_x = document.getElementById('the_info');
+  script_js_exec_counter[20]++;
+  info_x.innerHTML = "";
+  script_js_exec_counter[21]++;
+  info_x.className = "";
+  script_js_exec_counter[22]++;
+  shutter_x.className = "";
+  script_js_exec_counter[23]++;
+  info_x.style.display = "none";
+  script_js_exec_counter[17]++;
+}
+function setActiveStyleSheet(title) {
+  script_js_exec_counter[24]++;
+  script_js_exec_counter[26]++;
+  switcher_x = document.getElementById('switcher');
+  if (switcher_x.className == 'compact') 
+  {
+    script_js_exec_counter[27]++;
+    switcher_x.className = "normal";
+    script_js_exec_counter[28]++;
+    document.getElementById("period").setAttribute('cellspacing', '2');
+    script_js_exec_counter[29]++;
+    switcher_x.href = "javascript:setActiveStyleSheet('normal');";
+  } else {
+    script_js_exec_counter[30]++;
+    switcher_x.className = "compact";
+    script_js_exec_counter[31]++;
+    document.getElementById("period").setAttribute('cellspacing', '1');
+    script_js_exec_counter[32]++;
+    switcher_x.href = "javascript:setActiveStyleSheet('compact');";
+  }
+  script_js_exec_counter[33]++;
+  var i, a, main;
+  for (i = 0; (a = document.getElementsByTagName("link")[i]); i++) 
+    {
+      if (a.getAttribute("rel").indexOf("style") != -1 && a.getAttribute("title")) 
+      {
+        script_js_exec_counter[35]++;
+        a.disabled = true;
+        if (a.getAttribute("title") == title) {
+          script_js_exec_counter[36]++;
+          a.disabled = false;
+        }
+      }
+    }
+  script_js_exec_counter[25]++;
+}
+function fireme() {
+  script_js_exec_counter[37]++;
+  script_js_exec_counter[39]++;
+  all_tds = document.getElementsByTagName("td");
+  for (var n = 0; n < all_tds.length; n++) 
+    {
+      if (!all_tds[n].className || all_tds[n].className == "") 
+      {
+        script_js_exec_counter[40]++;
+        all_tds[n].onclick = function() {
+  script_js_exec_counter[41]++;
+  script_js_exec_counter[43]++;
+  id = this.getElementsByTagName('strong')[0].firstChild.nodeValue;
+  script_js_exec_counter[44]++;
+  detailed(id);
+  script_js_exec_counter[42]++;
+};
+        script_js_exec_counter[45]++;
+        all_tds[n].onmouseover = function() {
+  script_js_exec_counter[46]++;
+  script_js_exec_counter[48]++;
+  this.className = "tdhover";
+  script_js_exec_counter[47]++;
+};
+        script_js_exec_counter[49]++;
+        all_tds[n].onmouseout = function() {
+  script_js_exec_counter[50]++;
+  script_js_exec_counter[52]++;
+  this.className = "";
+  script_js_exec_counter[51]++;
+};
+      }
+    }
+  script_js_exec_counter[53]++;
+  getAJAX = getHTTPObject();
+  script_js_exec_counter[38]++;
+}
+function getHTTPObject() {
+  script_js_exec_counter[54]++;
+  script_js_exec_counter[55]++;
+  var xmlhttp;
+  if (!xmlhttp && typeof XMLHttpRequest != 'undefined') 
+  {
+    try {
+      script_js_exec_counter[57]++;
+      xmlhttp = new XMLHttpRequest();
+    }    catch (e) {
+  script_js_exec_counter[58]++;
+  xmlhttp = false;
+}
+  }
+  script_js_exec_counter[59]++;
+  return xmlhttp;
+}
+script_js_exec_counter[1]++;

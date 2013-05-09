@@ -11,7 +11,6 @@ import org.apache.log4j.Logger;
 
 import codesmells.JavaScriptObjectInfo;
 import codesmells.SmellDetector;
-import codesmells.SmellDetector.SmellLocation;
 
 import com.crawljax.browser.EmbeddedBrowser;
 import com.crawljax.core.configuration.CrawljaxConfigurationReader;
@@ -1029,10 +1028,14 @@ public class Crawler implements Runnable {
 			HashSet<String> globalsVarList = new HashSet<String>();	// keeping global variables
 			Object acceptable = null;
 			for (int i=0;i<globalVars.size();i++){
+				// disregarding window and document objects and propertiees
 				if (!globalVars.get(i).equals("window") && !globalVars.get(i).equals("document")  
 						&& !globalVars.get(i).equals("top")  && !globalVars.get(i).equals("navigator")
 						&& !globalVars.get(i).equals("location")  && !globalVars.get(i).equals("InstallTrigger")
+						&& !globalVars.get(i).equals("self")  && !globalVars.get(i).equals("parent")
+						&& !globalVars.get(i).equals("history")  && !globalVars.get(i).equals("screen")
 						&& !globalVars.get(i).equals("fxdriver_id")  && !globalVars.get(i).equals("__fxdriver_unwrapped")
+						// also disregard the instrumented object
 						&& !((String)globalVars.get(i)).contains("exec_counter")){
 
 					acceptable =  this.browser.executeJavaScript("if (typeof " + globalVars.get(i) + " !== 'function') return true; else return false;");

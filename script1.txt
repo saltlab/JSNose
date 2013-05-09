@@ -1,0 +1,4 @@
+script1_exec_counter[0]++;
+script1_exec_counter[2]++;
+fireme();
+script1_exec_counter[1]++;

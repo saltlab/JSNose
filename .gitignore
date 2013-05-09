@@ -6,4 +6,4 @@ target/
 release.properties
 pom.xml.releaseBackup
 git.properties
-CodeSmells.txt
+*.txt

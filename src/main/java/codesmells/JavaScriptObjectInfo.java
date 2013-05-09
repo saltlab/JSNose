@@ -2,6 +2,11 @@ package codesmells;
 
 import java.util.ArrayList;
 
+/**
+ * JavaScriptObjectInfo is used to store informations about a JavaScript object
+ * 
+ * @author Amin Milani Fard
+ */
 public class JavaScriptObjectInfo {
 	private String name = "";
 	private String type = "";

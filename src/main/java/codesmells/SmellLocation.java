@@ -1,6 +1,10 @@
 package codesmells;
 
-
+/**
+ * SmellLocation is used to keep the location of a code smell in a JavaScript file
+ * 
+ * @author Amin Milani Fard
+ */
 public class SmellLocation{
 	String smellyItemName;
 	String jsFile;

@@ -14,7 +14,7 @@ import org.w3c.dom.Node;
 /**
  * Main JSNose smell detection method
  * 
- * @author Aimin Milani Fard
+ * @author Amin Milani Fard
  */
 public class SmellDetector {
 

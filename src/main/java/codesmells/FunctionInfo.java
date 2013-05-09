@@ -1,5 +1,10 @@
 package codesmells;
 
+/**
+ * FunctionInfo is used to store informations about a JavaScript function
+ * 
+ * @author Amin Milani Fard
+ */
 class FunctionInfo{
 
 	String name;

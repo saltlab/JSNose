@@ -367,7 +367,7 @@ public class Crawler implements Runnable {
 				}
 
 
-				double cov = this.controller.getCoverage();
+				double cov = this.controller.getCoverage(false);
 
 				if (controller.isDiverseCrawling())
 					controller.getSession().getStateFlowGraph().setLatestCoverage(cov);
@@ -683,6 +683,7 @@ public class Crawler implements Runnable {
 
 		// generate the last report
 		SmellDetector.generateReport(true);
+		SmellDetector.writeReportTofile();
 
 
 		controller.getBrowserPool().freeBrowser(this.getBrowser());
@@ -1041,8 +1042,9 @@ public class Crawler implements Runnable {
 					acceptable =  this.browser.executeJavaScript("if (typeof " + globalVars.get(i) + " !== 'function') return true; else return false;");
 					if (acceptable.toString().equals("true")){
 						globalsVarList.add(globalVars.get(i).toString());
-
 					}
+					else
+						System.out.println(globalVars.get(i).toString() + " IS NOT CONSIDERED AS GLOBAL");
 				}
 			}
 			System.out.println("********** RUNTIME GLOBALS DETECTION **********");

@@ -110,7 +110,7 @@ public class InitialCrawler extends Crawler {
 					LOGGER.info("Could not execute script");
 				}
 			}
-			double cov = this.controller.getCoverage();
+			double cov = this.controller.getCoverage(false);
 
 			if (controller.isDiverseCrawling())
 				controller.getSession().getStateFlowGraph().setInitialCoverage(indexState, cov);

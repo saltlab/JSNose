@@ -76,38 +76,48 @@ public class CrawljaxController implements CrawlQueueManager {
 	}
 
 	// Amin: compute code coverage
-	public double getCoverage(){
-		//double coverage = 0.0;
-		int totalExecutedLines = 0, totalLines = 0;
+	public double getCoverage(boolean printToFile){
 
-		for (String modifiedJS : JSModifyProxyPlugin.getModifiedJSList()){
-			if (JSCountList.containsKey(modifiedJS)){
-				totalLines += JSCountList.get(modifiedJS).size();
-				int executedLines = 0;
-				LOGGER.info(" List of " + modifiedJS + " is: " + JSCountList.get(modifiedJS));
-
-				for (int i: JSCountList.get(modifiedJS))
-					if (i>0){
-						totalExecutedLines++;
-						executedLines++;
-					}
-
-				LOGGER.info(" List of " + modifiedJS + " # lines ececuted: " + executedLines + " # tolal lines: " + JSCountList.get(modifiedJS).size() + " - code coverage: " + (double)executedLines/(double)JSCountList.get(modifiedJS).size()*100+"%");
+		try {
+			if (printToFile){
+				this.fstream = new FileWriter("SmellReport.txt", true);
+				this.out = new BufferedWriter(fstream);
 			}
-		}
 
-		try{
+			//double coverage = 0.0;
+			int totalExecutedLines = 0, totalLines = 0;
+
+			for (String modifiedJS : JSModifyProxyPlugin.getModifiedJSList()){
+				if (JSCountList.containsKey(modifiedJS)){
+					totalLines += JSCountList.get(modifiedJS).size();
+					int executedLines = 0;
+
+					LOGGER.info(" List of " + modifiedJS + " is: " + JSCountList.get(modifiedJS));
+					if (printToFile)
+						out.write(" List of " + modifiedJS + " is: " + JSCountList.get(modifiedJS) + "\n");
+
+					for (int i: JSCountList.get(modifiedJS))
+						if (i>0){
+							totalExecutedLines++;
+							executedLines++;
+						}
+
+					LOGGER.info("List of " + modifiedJS + " # lines ececuted: " + executedLines + " # tolal lines: " + JSCountList.get(modifiedJS).size() + " - code coverage: " + (double)executedLines/(double)JSCountList.get(modifiedJS).size()*100+"%\n");
+					if (printToFile)
+						out.write("List of " + modifiedJS + " # lines ececuted: " + executedLines + " # tolal lines: " + JSCountList.get(modifiedJS).size() + " - code coverage: " + (double)executedLines/(double)JSCountList.get(modifiedJS).size()*100+"%\n");
+				}
+			}
+
 			long timeCrawlCalc = System.currentTimeMillis() - startCrawl;
 
 			coverage = (double)totalExecutedLines/(double)totalLines;
-			
-			//out.write(" List of " + modifiedJS + " - Time: " + formatRunningTime(timeCrawlCalc) + " - code coverage: " + (double)executedLines/(double)JSCountList.get(modifiedJS).size()*100+"%" + "\n");
-			out.write("Time: " + timeCrawlCalc/1000 + " " + coverage*100+"\n");
-			//out.write("Time: " + formatRunningTime(timeCrawlCalc) + " - code coverage: " + coverage*100+"%" + "\n");
-			LOGGER.info("Time: " + formatRunningTime(timeCrawlCalc) + " - code coverage: " + coverage*100+"%");
 
-			//LOGGER.info("time(" + timeCrawlCalc + "ms) ~= "
-			//        + formatRunningTime(timeCrawlCalc));
+			LOGGER.info("Time: " + formatRunningTime(timeCrawlCalc) + " - code coverage: " + coverage*100+"%");
+			if (printToFile){
+				out.write("Time: " + formatRunningTime(timeCrawlCalc) + " - code coverage: " + coverage*100+"%" + "\n");
+				out.close();
+			}
+
 		}catch(Exception e){
 			LOGGER.info("IO exception!");
 			e.printStackTrace();
@@ -178,14 +188,6 @@ public class CrawljaxController implements CrawlQueueManager {
 		this.diverseCrawling = config.getCrawlSpecification().isDiverseCrawling();
 		this.efficientCrawling = config.getCrawlSpecification().isEfficientCrawling();
 		this.randomEventExec = config.getCrawlSpecification().isRandomEventExec();
-
-		try {
-			this.fstream = new FileWriter("coverage.txt", true);
-			this.out = new BufferedWriter(fstream);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		
 		configurationReader = new CrawljaxConfigurationReader(config);
 		CrawlSpecificationReader crawlerReader =
@@ -488,25 +490,8 @@ public class CrawljaxController implements CrawlQueueManager {
 		LOGGER.info("Dom average size (byte): " + stateFlowGraph.getMeanStateStringSize());
 		LOGGER.info("DONE!!!");
 		
-		// Amin: This prints the overall average DOM and path diversity of the SFG
-		//LOGGER.info("Overall DOM diversity: " + stateFlowGraph.getFinalDOMDiv());
-		//LOGGER.info("Overall Path diversity: " + stateFlowGraph.getFinalPathDiv());
-		//LOGGER.info(stateFlowGraph);
-		
-		
-		try {
-			out.write("Total Crawling time(" + timeCrawlCalc + "ms) ~= "
-			        + formatRunningTime(timeCrawlCalc) + "\n");
-			out.write("EXAMINED ELEMENTS: " + elementChecker.numberOfExaminedElements() + "\n");
-			out.write("CLICKABLES: " + stateFlowGraph.getAllEdges().size() + "\n");
-			out.write("STATES: " + stateFlowGraph.getAllStates().size() + "\n");
-			out.write("Dom average size (byte): " + stateFlowGraph.getMeanStateStringSize() + "\n");
-			
-			out.close();
-		} catch (IOException e) {
-			LOGGER.info("Could not write into the stat file!");
-			e.printStackTrace();
-		}
+		// Amin: Calling getCoverage to write coverage report into the SmellReport.txt file 
+		getCoverage(true);
 		
 	}
 

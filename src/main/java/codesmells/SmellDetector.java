@@ -1,7 +1,9 @@
 package codesmells;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -237,10 +239,15 @@ public class SmellDetector {
 	}
 	
 	
-	public static void reportSmell(HashSet<SmellLocation> smell){
+	public static String reportSmell(HashSet<SmellLocation> smell){
+		String report = "";
 		System.out.println("Number of occurance: " + smell.size());
-		for (SmellLocation l:smell)
+		report += "Number of occurance: " + smell.size() + "\n";
+		for (SmellLocation l:smell){
 			System.out.println("Item: " + l.getSmellyItemName() + " in JS file: " + l.getJsFile() +" at line number: " + l.getLineNumber());
+			report += "Item: " + l.getSmellyItemName() + " in JS file: " + l.getJsFile() +" at line number: " + l.getLineNumber() + "\n";
+		}
+		return report;
 	}	
 	
 
@@ -1142,106 +1149,83 @@ public class SmellDetector {
 		}
 	}
 
-	
+
 
 	/**
-	 * TODO: Writing final smell report to file
+	 * Writing final smell report to file
 	 */
-/*	public static void writeReportTofile(){
+	public static void writeReportTofile(){
+		FileWriter fstream;
+		BufferedWriter out;
 
 		try {
-			// printing final report to the report file
-			File file = new File("SmellReport.txt");
-			if (!file.exists()) {
-				file.createNewFile();
-			}
-
-			FileOutputStream fop = new FileOutputStream(file);
-
-			fop.write(ast.toSource().getBytes());
-			fop.flush();
-
-			fop.write("***************************************\n********** CODE SMELL REPORT **********\n***************************************".getBytes());
+			fstream = new FileWriter("SmellReport.txt", true);
+			out = new BufferedWriter(fstream);
+			
+			out.write("***************************************\n********** CODE SMELL REPORT **********\n***************************************\n");
 
 			analyseObjecsList();
 
-			System.out.println("********** CLOSURE SMELL **********");
-			reportSmell(closureSmellLocation);
+			out.write("********** CLOSURE SMELL **********\n");
+			out.write(reportSmell(closureSmellLocation));
 
 
-			System.out.println("********** COUPLING JS/HTML **********");
+			out.write("********** COUPLING JS/HTML **********\n");
 
-			System.out.println("Total number of JavaScript in HTML tags: " + jsInTagFound.size());
+			out.write("Total number of JavaScript in HTML tags: " + jsInTagFound.size()  + "\n");
 
 			for (String jTag: jsInTagFound)
-				System.out.println(jTag);
+				out.write(jTag);
 
-			System.out.println("Occurance of CSS in JavaScript");
-			reportSmell(CSSinJS);
+			out.write("\nOccurance of CSS in JavaScript\n");
+			out.write(reportSmell(CSSinJS));
 
-			//System.out.println("Total number of JavaScript lines in HTML: " + inlineJavaScriptLines);
-			//for (String sn: inlineJavaScriptScopeName)
-			//	System.out.println("Scope having the inline JavaScript: " + sn);
+			out.write("********** EMPTY CATCH **********\n");
+			out.write(reportSmell(emptyCatchFound));
 
-
-			System.out.println("********** EMPTY CATCH **********");
-			reportSmell(emptyCatchFound);
-
-			// because globals are extracted at runtime, they are not available in the first execution of this part of code
 			if (globals.size() > 0){
-				System.out.println("********** EXCESSIVE GLOBAL VARIABLES **********");
-				System.out.println("Number of global variables: " + globals.size());
-				System.out.println("List of  global variables: " + globals);
+				out.write("********** EXCESSIVE GLOBAL VARIABLES **********\n");
+				out.write("Number of global variables: " + globals.size() + "\n");
+				out.write("List of  global variables: " + globals + "\n");
 			}
 
-			System.out.println("********** LARGE OBJECT **********");
-			reportSmell(largeObjectsLocation);		
+			out.write("********** LARGE OBJECT **********\n");
+			out.write(reportSmell(largeObjectsLocation));		
 
-			System.out.println("********** LAZY OBJECT **********");
-			reportSmell(lazyObjectsLocation);
+			out.write("********** LAZY OBJECT **********\n");
+			out.write(reportSmell(lazyObjectsLocation));
 
-			System.out.println("********** LONG MESSAGE **********");
-			reportSmell(longMessageFound);
+			out.write("********** LONG MESSAGE **********\n");
+			out.write(reportSmell(longMessageFound));
 
-			System.out.println("********** LONG METHOD/FUNCTION **********");
-			reportSmell(longMethodFound);
+			out.write("********** LONG METHOD/FUNCTION **********\n");
+			out.write(reportSmell(longMethodFound));
 
-			System.out.println("********** LONG PARAMETER LIST **********");
-			reportSmell(longParameterListFound);
+			out.write("********** LONG PARAMETER LIST **********\n");
+			out.write(reportSmell(longParameterListFound));
 
-			//System.out.println("********** LONG PROTOTYPE CHAIN **********");
-			//reportSmell(longPrototypeChainObjLocation);
+			out.write("********** NESTED CALLBACK **********\n");
+			out.write(reportSmell(nestedCallBackFound));
 
+			out.write("********** REFUSED BEQUEST **********\n");
+			out.write(reportSmell(refusedBequestObjLocation));
 
-			// More detection process for callback is to dynamically check if the type of a parameter is function
-			System.out.println("********** NESTED CALLBACK **********");
-			reportSmell(nestedCallBackFound);
+			out.write("********** SWITCH STATEMENT **********\n");
+			out.write(reportSmell(switchFound));
 
-			System.out.println("********** REFUSED BEQUEST **********");
-			reportSmell(refusedBequestObjLocation);
+			out.write("********** UNREACHABLE CODE **********\n");
+			out.write(reportSmell(unReachable));
 
-			System.out.println("********** SWITCH STATEMENT **********");
-			reportSmell(switchFound);
-
-
-			System.out.println("********** UNREACHABLE CODE **********");
-			reportSmell(unReachable);
-
-			fop.close();
-
-
+			out.close();
 		}
 		catch (IOException ioe) {
 			System.out.println("Could not write the instrumented file into disk!");
-			}
-
 		}
-		
+
 	}
 
-	*/
-	
-	
+
+
 	// filtering large/lazy objects based on dynamically inferred object list
 	public static void filterObjects(HashSet<JavaScriptObjectInfo> largeObjects,
 			HashSet<JavaScriptObjectInfo> lazyObjects) {

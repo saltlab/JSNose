@@ -445,7 +445,7 @@ the various navigation paths and states within an Ajax application.</description
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<selenium.version>2.26.0</selenium.version>
+		<selenium.version>2.33.0</selenium.version>
 	</properties>
 
 </project>

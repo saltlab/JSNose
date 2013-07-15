@@ -31,9 +31,12 @@ public final class JSNoseExample {
 	private static boolean doRandomEventExec = false;   // set it true for randomizing event execution
 	private static boolean doClickOnce = true;         // true: click only once on each clickable, false: multiple click
 	
+	
+	private static final String URL = "http://demo.crawljax.com/";
+	
 	//Final selected experimental objects
 
-	private static final String URL = "http://localhost/chess/index.html";	// chessGame
+	//private static final String URL = "http://localhost/chess/index.html";	// chessGame
 	//private static final String URL = "http://localhost/Symbolistic/";  		// Symbolistic
 	//private static final String URL = "http://localhost/Tunnel/";  			// Tunnel
 	//private static final String URL = "http://localhost/GhostBusters/";  		// GhostBusters

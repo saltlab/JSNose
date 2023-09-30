@@ -19,7 +19,7 @@ JSNose is a JavaScript code smell detector tool written in Java. The tool at thi
 
 Paper
 -----
-A. Milani Fard, A. Mesbah, ["JSNose: Detecting JavaScript Code Smells”](http://www.ece.ubc.ca/~aminmf/SCAM2013.pdf), 13th IEEE International Conference on Source Code Analysis and Manipulation (SCAM 2013), Eindhoven, The Netherlands, 2013
+A. Milani Fard, A. Mesbah, ["JSNose: Detecting JavaScript Code Smells”](https://people.ece.ubc.ca/aminmf/SCAM2013.pdf), 13th IEEE International Conference on Source Code Analysis and Manipulation (SCAM 2013), Eindhoven, The Netherlands, 2013
 
 Usage
 -----------------
@@ -31,4 +31,4 @@ The core smell detection process and thresholds are located in JSNose/src/main/j
 
 Experimental data
 -----------------
-The experimental data produced by JSNose is available for [download](http://www.ece.ubc.ca/~aminmf/jsnose_results.zip).
+The experimental data produced by JSNose is available for [download](https://people.ece.ubc.ca/aminmf/jsnose_results.zip).

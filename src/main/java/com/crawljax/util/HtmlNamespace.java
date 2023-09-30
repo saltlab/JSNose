@@ -41,13 +41,19 @@ public class HtmlNamespace implements NamespaceContext {
 		throw new UnsupportedOperationException();
 	}
 
-	// This method isn't necessary for XPath processing either.
+    @Override
+    public Iterator<String> getPrefixes(String namespaceURI) {
+        return null;
+    }
+
+    // This method isn't necessary for XPath processing either.
 	/**
 	 * @param uri
 	 *            TODO: DOCUMENT ME!
 	 * @return TODO: DOCUMENT ME!
 	 */
-	public Iterator<?> getPrefixes(String uri) {
-		throw new UnsupportedOperationException();
-	}
+//	public Iterator<?> getPrefixes(String uri) {
+//		throw new UnsupportedOperationException();
+//	}
+
 }

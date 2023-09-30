@@ -16,6 +16,10 @@ import com.crawljax.plugins.aji.executiontracer.AstInstrumenter;
 import com.crawljax.plugins.webscarabwrapper.WebScarabWrapper;
 import com.crawljax.core.configuration.Form;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 
 /**
  * Simple JSNose Example.
@@ -26,14 +30,15 @@ import com.crawljax.core.configuration.Form;
 public final class JSNoseExample {
 
 	//Our settings for the SCAM paper
-	private static boolean doDiverseCrawling = true;	// default should be false
+	private static boolean doDiverseCrawling = false;	// default should be false
 	private static boolean doEfficientCrawling = false;	// default should be false
 	private static boolean doRandomEventExec = false;   // set it true for randomizing event execution
 	private static boolean doClickOnce = true;         // true: click only once on each clickable, false: multiple click
 	
 	
-	private static final String URL = "http://demo.crawljax.com/";
-	
+	//Target Application URL
+	private static final String URL = "http://127.0.0.1:8081/ptable/";
+
 	//Final selected experimental objects
 
 	//private static final String URL = "http://localhost/chess/index.html";	// chessGame
@@ -74,8 +79,8 @@ public final class JSNoseExample {
 		CrawljaxConfiguration config = new CrawljaxConfiguration();
 		config.setCrawlSpecification(getCrawlSpecification());
 		config.setThreadConfiguration(getThreadConfiguration());
-		config.setBrowser(BrowserType.firefox);
-		
+		config.setBrowser(BrowserType.chrome);
+
 			
 		// Amin: Create a Proxy for the purpose of code instrumentation
 		config.setProxyConfiguration(new ProxyConfiguration());
@@ -185,6 +190,21 @@ public final class JSNoseExample {
 	 *            the command line args
 	 */
 	public static void main(String[] args) {
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		InputStream is = cl.getResourceAsStream("jsnose.properties");
+		Properties p = new Properties();
+		try {
+			p.load(is);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("Missing Properties ... ");
+			System.exit(1);
+		}
+        String webdriver = p.getProperty("webdriver.chrome.driver");
+        System.setProperty("webdriver.chrome.driver", webdriver);
+//		System.setProperty("webdriver.gecko.driver", p.getProperty("webdriver.gecko.driver"));
+
+
 		try {
 			CrawljaxController crawljax = new CrawljaxController(getCrawljaxConfiguration());
 			crawljax.run();
